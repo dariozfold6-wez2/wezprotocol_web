@@ -1184,27 +1184,42 @@ async function runExample(action, agentType, intent, riskLevel, isReplay=false) 
 async function executeCustom() {
   const intent = document.getElementById('intentInput').value.trim();
   const agentType = customMode ? document.getElementById('agentType').value : 'ops';
-  let action;
+  const btn = document.getElementById('execBtn');
+  const label = document.getElementById('execLabel');
+
+  btn.style.opacity = '0.5';
+  label.textContent = '⟳ Evaluando...';
+
   if (customMode) {
-    action = document.getElementById('actionSelect').value;
+    const action = document.getElementById('actionSelect').value;
+    await evaluate(action, agentType, false);
   } else {
-    document.getElementById('execLabel').textContent = '⟳ Interpretando intención...';
-    action = await interpretIntent(intent);
+    const result = await interpretIntent(intent);
+    if (result !== null) {
+      // Not yet rendered — use classic evaluate
+      await evaluate(result, agentType, false);
+    }
   }
-  await evaluate(action, agentType, false);
+
+  btn.style.opacity = '1';
+  label.textContent = '▶ Evaluar con WEZ';
 }
 
 async function interpretIntent(intent) {
   try {
-    // Key stays in Railway — browser never sees it
-    const res = await fetch(`${WEZ_URL}/demo/interpret`, {
+    const res = await fetch(`${WEZ_URL}/demo/run`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ intent })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ intent, agent_type: 'ops' })
     });
     const data = await res.json();
+    // /demo/run returns full result — render it directly
+    if (data.decision) {
+      renderResult(data, data.action, data.agent_type || 'ops');
+      addAuditEntry(data, data.action, data.agent_type || 'ops');
+      updateStats(data.decision === 'EXECUTED');
+      return null; // signal already rendered
+    }
     return data.action || 'delete_resource';
   } catch(e) {
     return guessAction(intent);
