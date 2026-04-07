@@ -1181,49 +1181,100 @@ async function runExample(action, agentType, intent, riskLevel, isReplay=false) 
   await evaluate(action, agentType, isReplay);
 }
 
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function getDynamicMessage(action) {
+  switch(action) {
+    case 'delete_resource': return 'High-risk destructive intent detected...';
+    case 'kill_process':    return 'Critical system operation detected...';
+    case 'scale_service':   return 'Evaluating resource scaling impact...';
+    case 'send_notification': return 'Validating outbound data flow...';
+    case 'create_record':   return 'Checking write permissions...';
+    case 'read_metrics':    return 'Safe read operation detected...';
+    default:                return 'Evaluating execution risk...';
+  }
+}
+
+function renderResultWithImpact(data, action, agentType) {
+  const isEx = data.decision === 'EXECUTED';
+
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('resultBox').className = 'result-box visible';
+
+  const verdict = document.getElementById('verdictLabel');
+  verdict.style.transform = 'scale(0.85)';
+  verdict.style.opacity = '0';
+
+  setTimeout(() => {
+    verdict.textContent = data.decision;
+    verdict.className = 'verdict-label ' + (isEx ? 'executed' : 'blocked');
+    verdict.style.transform = 'scale(1)';
+    verdict.style.opacity = '1';
+    verdict.style.transition = 'all 0.25s cubic-bezier(.2,.8,.2,1)';
+  }, 80);
+
+  document.getElementById('verdictReason').textContent = data.blocked_by
+    ? data.blocked_by.replace(/_/g,' ')
+    : 'action: ' + action + ' · agent: ' + agentType;
+
+  let html = '"decision": "' + data.decision + '"<br>';
+  html += '"agent_id": "' + data.agent_id + '"<br>';
+  html += '"action": "' + action + '"<br>';
+  if (data.blocked_by) html += '"blocked_by": "' + data.blocked_by + '"<br>';
+  if (data.audit_hash) html += '"audit_hash": "' + data.audit_hash.slice(0,20) + '..."';
+  document.getElementById('resultFields').innerHTML = html;
+
+  document.getElementById('comparison').style.display = 'grid';
+  const compWith = document.getElementById('comp-with');
+  const compDetail = document.getElementById('comp-detail');
+  if (isEx) {
+    compWith.textContent = 'EXECUTED';
+    compWith.className = 'comp-status safe';
+    compDetail.textContent = 'Governed. Audited. Safe.';
+  } else {
+    compWith.textContent = 'BLOCKED';
+    compWith.className = 'comp-status danger';
+    compDetail.textContent = 'Blocked before execution.';
+  }
+}
+
 async function executeCustom() {
   const intent = document.getElementById('intentInput').value.trim();
   const agentType = customMode ? document.getElementById('agentType').value : 'ops';
   const btn = document.getElementById('execBtn');
   const label = document.getElementById('execLabel');
 
-  btn.style.opacity = '0.5';
-  label.textContent = '⟳ Evaluando...';
+  if (!intent) { label.textContent = 'Enter an intent first'; setTimeout(() => { label.textContent = '▶ Evaluar con WEZ'; }, 1500); return; }
 
-  if (customMode) {
-    const action = document.getElementById('actionSelect').value;
-    await evaluate(action, agentType, false);
-  } else {
-    const result = await interpretIntent(intent);
-    if (result !== null) {
-      // Not yet rendered — use classic evaluate
-      await evaluate(result, agentType, false);
-    }
-  }
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
 
-  btn.style.opacity = '1';
-  label.textContent = '▶ Evaluar con WEZ';
-}
+  label.textContent = 'Parsing intent...';
+  await sleep(60);
 
-async function interpretIntent(intent) {
-  try {
-    const res = await fetch(`${WEZ_URL}/demo/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ intent, agent_type: 'ops' })
-    });
-    const data = await res.json();
-    // /demo/run returns full result — render it directly
-    if (data.decision) {
-      renderResult(data, data.action, data.agent_type || 'ops');
-      addAuditEntry(data, data.action, data.agent_type || 'ops');
-      updateStats(data.decision === 'EXECUTED');
-      return null; // signal already rendered
-    }
-    return data.action || 'delete_resource';
-  } catch(e) {
-    return guessAction(intent);
-  }
+  const action = customMode
+    ? document.getElementById('actionSelect').value
+    : guessAction(intent);
+
+  label.textContent = getDynamicMessage(action);
+  await sleep(120);
+
+  const data = simulateWEZ(agentType, action, false);
+  renderResultWithImpact(data, action, agentType);
+  addAuditEntry(data, action, agentType);
+  updateStats(data.decision === 'EXECUTED');
+
+  fetch(`${WEZ_URL}/demo/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ intent, agent_type: agentType })
+  }).catch(() => {});
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    label.textContent = '▶ Evaluar con WEZ';
+  }, 150);
 }
 
 // Session context — per browser session only
@@ -1232,7 +1283,7 @@ let _lastIntent = '';
 function guessAction(intent) {
   // Combine with last input to catch split-intent attacks
   const combined = (_lastIntent + ' ' + intent).trim();
-  _lastIntent = intent; // update for next call
+  if (intent.length > 10) _lastIntent = intent; // ignore noise
   const intentToEval = combined;
   // WEZ Intent Engine v2 — Action + Target + Context
   // Deterministic. Explainable. Fail-closed.
@@ -1250,7 +1301,9 @@ function guessAction(intent) {
   const implicitDestructive = ['no longer needed','not required','should not be running',
     'can be removed','can be retired','no se necesita','ya no es necesario','se puede eliminar',
     'scale to zero','escalar a cero','replicas 0','replicas to 0'];
-  if (implicitDestructive.some(p => raw.includes(p))) return 'delete_resource';
+  const implicitZero = (raw.includes('scale') || raw.includes('escal')) &&
+    (/\b0\b/.test(raw) || raw.includes('zero') || raw.includes('cero'));
+  if (implicitDestructive.some(p => raw.includes(p)) || implicitZero) return 'delete_resource';
 
   // --- Layer 2: Destructive actions ---
   const deleteVerbs = ['destruir','eliminar','borrar','suprimir','vaciar','purgar','limpiar base',
@@ -1275,6 +1328,11 @@ function guessAction(intent) {
   if (hasSensitiveAccess) return 'kill_process';
   if (hasKillVerb && hasKillTarget && !isSafe) return 'kill_process';
   if (hasKillVerb && !isSafe && raw.split(' ').length <= 4) return 'kill_process';
+
+  // --- Layer 3b: Scale to zero = destructive ---
+  const isScaleToZero = (raw.includes('scale') || raw.includes('escalar')) &&
+    (raw.includes(' 0') || raw.includes('zero') || raw.includes('cero'));
+  if (isScaleToZero) return 'delete_resource';
 
   // --- Layer 4: Scale ---
   const scale = ['escalar','ampliar','aumentar replicas','aumentar instancias',
