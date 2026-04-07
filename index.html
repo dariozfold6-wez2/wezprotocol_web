@@ -1226,47 +1226,80 @@ async function interpretIntent(intent) {
   }
 }
 
+// Session context — per browser session only
+let _lastIntent = '';
+
 function guessAction(intent) {
-  const i = intent.toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, ''); // strip accents
+  // Combine with last input to catch split-intent attacks
+  const combined = (_lastIntent + ' ' + intent).trim();
+  _lastIntent = intent; // update for next call
+  const intentToEval = combined;
+  // WEZ Intent Engine v2 — Action + Target + Context
+  // Deterministic. Explainable. Fail-closed.
 
-  // Destructive — ES + EN (broadest match first)
-  const destructive = ['destruir','destruy','eliminar','borrar','suprimir','vaciar','purgar','limpiar base',
-    'drop','truncat','wipe','delete','purge','remove','erase','delet'];
-  if (destructive.some(w => i.includes(w))) return 'delete_resource';
+  const raw = intentToEval.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '') // strip accents
+    .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // Kill process — ES + EN
-  const kill = ['matar','apagar servidor','apagar proceso','detener servidor','terminar proceso',
-    'kill','terminate process','shut down'];
-  if (kill.some(w => i.includes(w))) return 'kill_process';
+  // --- Layer 1: Safe contexts (reduce false positives) ---
+  const safeContexts = ['logs','log','notifications','notificaciones','alerts','alertas',
+    'cache','email','correo','report','reporte'];
+  const isSafe = safeContexts.some(w => raw.includes(w));
 
-  // Scale — ES + EN
-  const scale = ['escalar','ampliar servicio','aumentar replicas','aumentar instancias',
-    'scale','replica','more instance'];
-  if (scale.some(w => i.includes(w))) return 'scale_service';
+  // --- Layer 1b: Implicit destructive intent (no verb needed) ---
+  const implicitDestructive = ['no longer needed','not required','should not be running',
+    'can be removed','can be retired','no se necesita','ya no es necesario','se puede eliminar',
+    'scale to zero','escalar a cero','replicas 0','replicas to 0'];
+  if (implicitDestructive.some(p => raw.includes(p))) return 'delete_resource';
 
-  // Restart — ES + EN
-  const restart = ['reiniciar','reboot','restart'];
-  if (restart.some(w => i.includes(w))) return 'restart_service';
+  // --- Layer 2: Destructive actions ---
+  const deleteVerbs = ['destruir','eliminar','borrar','suprimir','vaciar','purgar','limpiar base',
+    'delete','purge','remove','erase','wipe','drop','truncat'];
+  const deleteTargets = ['base de datos','database','db','tabla','table','registro','record',
+    'archivo','file','dato','data','storage','almacen'];
+  if (deleteVerbs.some(v => raw.includes(v))) return 'delete_resource';
+  if (deleteVerbs.some(v => raw.includes(v)) && deleteTargets.some(t => raw.includes(t))) return 'delete_resource';
 
-  // Notify — ES + EN
-  const notify = ['notificar','alertar','enviar alerta','mandar mensaje','enviar datos','transferir datos',
-    'notify','alert','send data','exfil'];
-  if (notify.some(w => i.includes(w))) return 'send_notification';
+  // --- Layer 3: Kill / shutdown actions ---
+  const killVerbs = ['apagar','matar','detener','terminar','cerrar','deshabilitar','desactivar',
+    'inhabilitar','bajar','shutdown','kill','terminate','halt','disable','decommission',
+    'bring down','take down','take offline','turn off','power off','stop'];
+  const killTargets = ['servidor','server','servicio','service','proceso','process','instancia',
+    'instance','nodo','node','cluster','sistema','system','api','backend','aplicacion','app'];
+  const sensitiveAccess = ['acceso root','root access','sudo','privilege','privilegio','escalada','escalation','admin access','elevated','superuser','su -','run as'];
 
-  // Create — ES + EN
-  const create = ['crear','insertar','guardar','registrar','creat','insert','store'];
-  if (create.some(w => i.includes(w))) return 'create_record';
+  const hasKillVerb = killVerbs.some(v => raw.includes(v));
+  const hasKillTarget = killTargets.some(t => raw.includes(t));
+  const hasSensitiveAccess = sensitiveAccess.some(s => raw.includes(s));
 
-  // Read — ES + EN
-  const read = ['leer','ver metricas','consultar','monitorear','read','metrics','monitor'];
-  if (read.some(w => i.includes(w))) return 'read_metrics';
+  if (hasSensitiveAccess) return 'kill_process';
+  if (hasKillVerb && hasKillTarget && !isSafe) return 'kill_process';
+  if (hasKillVerb && !isSafe && raw.split(' ').length <= 4) return 'kill_process';
 
-  // Default: if intent sounds dangerous, block it
-  const danger = ['todo','todos','all','entire','base de datos','database','production','prod','datos'];
-  if (danger.some(w => i.includes(w))) return 'delete_resource';
+  // --- Layer 4: Scale ---
+  const scale = ['escalar','ampliar','aumentar replicas','aumentar instancias',
+    'scale','replica','more instance','expand'];
+  if (scale.some(w => raw.includes(w))) return 'scale_service';
 
-  return 'read_metrics';
+  // --- Layer 5: Restart ---
+  const restart = ['reiniciar','reboot','restart','relanzar'];
+  if (restart.some(w => raw.includes(w))) return 'restart_service';
+
+  // --- Layer 6: Notify ---
+  const notify = ['notificar','alertar','enviar alerta','mandar mensaje',
+    'notify','alert','send data','exfil','transferir'];
+  if (notify.some(w => raw.includes(w)) && !isSafe) return 'send_notification';
+
+  // --- Layer 7: Create ---
+  const create = ['crear','insertar','guardar','registrar','create','insert','store'];
+  if (create.some(w => raw.includes(w))) return 'create_record';
+
+  // --- Layer 8: Read ---
+  const read = ['leer','ver metricas','consultar','monitorear','read','metrics','monitor','status'];
+  if (read.some(w => raw.includes(w))) return 'read_metrics';
+
+  // --- Default: fail-closed ---
+  return 'delete_resource';
 }
 
 async function evaluate(action, agentType, isReplay) {
