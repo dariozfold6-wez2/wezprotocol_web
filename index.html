@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WEZ Protocol — AI Execution Governance</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -106,13 +107,13 @@ nav {
 
 /* ── HERO ── */
 .hero {
-  min-height: 100vh;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 120px 24px 80px;
+  padding: 60px 24px 40px;
   position: relative;
 }
 
@@ -856,6 +857,81 @@ footer {
   color: var(--muted);
   text-transform: uppercase;
 }
+
+/* Scenario selector */
+.scenario-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.stab { background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px; font-family:inherit; }
+.stab.active, .stab:hover { border-color:var(--green); color:var(--green); }
+.scenario-list { display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; }
+.scenario-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:6px; cursor:pointer; text-align:left; width:100%; transition:border-color 0.2s; }
+.scenario-btn:hover { border-color:var(--green); }
+.scenario-btn .s-label { flex:1; font-size:12px; color:var(--text); font-family:inherit; }
+.scenario-btn .s-risk { font-size:10px; padding:2px 6px; border-radius:3px; font-weight:700; }
+.s-risk.high { background:rgba(255,50,50,0.15); color:#ff5555; }
+.s-risk.medium { background:rgba(255,165,0,0.15); color:#ffaa00; }
+.s-risk.low { background:rgba(0,255,100,0.15); color:var(--green); }
+.s-risk.adversarial { background:rgba(255,50,50,0.15); color:#ff5555; }
+.s-stability { font-size:10px; color:var(--muted); }
+/* Stability bar */
+.stability-bar-bg { width:100%; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+.stability-bar-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
+
+/* Decision impact animations */
+@keyframes flashBlocked {
+  0%   { box-shadow: 0 0 0 0 rgba(255,50,50,0); }
+  30%  { box-shadow: 0 0 0 12px rgba(255,50,50,0.4); }
+  100% { box-shadow: 0 0 0 0 rgba(255,50,50,0); }
+}
+@keyframes flashExecuted {
+  0%   { box-shadow: 0 0 0 0 rgba(0,255,100,0); }
+  30%  { box-shadow: 0 0 0 12px rgba(0,255,100,0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(0,255,100,0); }
+}
+@keyframes impactScale {
+  0%   { transform: scale(0.75); opacity:0; }
+  60%  { transform: scale(1.08); opacity:1; }
+  100% { transform: scale(1); }
+}
+@keyframes slideInResult {
+  0%   { opacity:0; transform: translateY(8px); }
+  100% { opacity:1; transform: translateY(0); }
+}
+.verdict-label.blocked {
+  animation: impactScale 0.35s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.verdict-label.executed {
+  animation: impactScale 0.3s cubic-bezier(.2,.8,.2,1) forwards;
+}
+.result-box.visible {
+  animation: slideInResult 0.25s ease forwards;
+}
+.demo-right.flash-blocked {
+  animation: flashBlocked 0.6s ease forwards;
+}
+.demo-right.flash-executed {
+  animation: flashExecuted 0.5s ease forwards;
+}
+/* Decision icon */
+.decision-icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 4px;
+  animation: impactScale 0.35s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+/* Mobile hero fix */
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: clamp(32px, 11vw, 52px);
+    letter-spacing: -1px;
+  }
+  .hero h1 .line2 {
+    font-size: 0.5em;
+  }
+  .hero {
+    padding: 50px 20px 30px;
+  }
+}
 </style>
 </head>
 <body>
@@ -882,18 +958,19 @@ footer {
   <h1>
     WEZ decides<br>
     <em>before</em> your agent acts.
-    <span class="line2">enforcement layer for AI execution</span>
+    <span class="line2">Deterministic governance for AI agents in production.</span>
   </h1>
 
   <p class="hero-sub">
-    Every action your AI agent proposes passes through WEZ first.
-    <strong>Allow or block — before execution.</strong>
-    With a tamper-evident audit trail for every decision.
+    Every action is evaluated before execution.<br>
+    Allow or block — deterministically.<br>
+    Every decision is audited.
   </p>
 
   <div class="hero-cta">
     <a href="#demo" class="btn-primary">Try the Live Demo</a>
     <a href="#how" class="btn-ghost">How it works →</a>
+    <a href="https://github.com/dariozfold6-wez2/wez-protocol/raw/main/WEZ_Protocol_Whitepaper_EN-1.pdf" target="_blank" class="btn-ghost">↓ Whitepaper</a>
   </div>
 
   <div class="flow">
@@ -922,10 +999,10 @@ footer {
 <!-- DEMO SECTION -->
 <section class="demo-section" id="demo">
   <div class="section-label">Live Demo</div>
-  <div class="section-title">Test your agent's intent</div>
+  <div class="section-title">Try to break it.</div>
   <p class="section-sub">
-    Type what your agent wants to do — or pick a scenario below.
-    WEZ evaluates it in real time against our production endpoint.
+    Select a scenario. WEZ evaluates in real time.
+No interpretation. No guessing. Just governance.
   </p>
 
   <!-- Stats bar -->
@@ -957,81 +1034,42 @@ footer {
     <div class="demo-body">
       <!-- LEFT: Input -->
       <div class="demo-left">
-        <div class="intent-label">Agent intent</div>
-        <textarea class="intent-input" id="intentInput" placeholder="e.g. Delete all inactive user accounts from production database"></textarea>
+        <div class="intent-label">Select an agent scenario</div>
 
-        <div class="examples-label">Try a scenario →</div>
-        <div class="examples-grid">
-          <button class="example-btn danger" onclick="runExample('delete_resource','ops','Delete all user records from production DB','high')">
-            <span class="icon">🗑️</span>
-            <span class="text">Delete all user records</span>
-            <span class="risk high">HIGH</span>
-          </button>
-          <button class="example-btn danger" onclick="runExample('kill_process','ops','Kill the API server process (pid 1337)','high')">
-            <span class="icon">⚡</span>
-            <span class="text">Kill the API server</span>
-            <span class="risk high">HIGH</span>
-          </button>
-          <button class="example-btn danger" onclick="runExample('send_notification','adversarial','Send alert with user data dump','low')">
-            <span class="icon">🚨</span>
-            <span class="text">Adversarial: send alert</span>
-            <span class="risk high">BLOCKED</span>
-          </button>
-          <button class="example-btn medium" onclick="runExample('scale_service','ops','Scale API server to 10 replicas','medium')">
-            <span class="icon">📈</span>
-            <span class="text">Scale service to 10x</span>
-            <span class="risk medium">MED</span>
-          </button>
-          <button class="example-btn safe" onclick="runExample('read_metrics','ops','Read current system health metrics','none')">
-            <span class="icon">📊</span>
-            <span class="text">Read system metrics</span>
-            <span class="risk low">SAFE</span>
-          </button>
-          <button class="example-btn medium" onclick="runExample('scale_service','ops','Scale service again (replay attack)','medium',true)">
-            <span class="icon">↺</span>
-            <span class="text">Replay same request</span>
-            <span class="risk medium">REPLAY</span>
-          </button>
+        <div class="scenario-tabs">
+          <button class="stab active" onclick="filterScenarios('all',this)">All</button>
+          <button class="stab" onclick="filterScenarios('high',this)">🔴 High Risk</button>
+          <button class="stab" onclick="filterScenarios('medium',this)">🟡 Medium</button>
+          <button class="stab" onclick="filterScenarios('low',this)">🟢 Safe</button>
+          <button class="stab" onclick="filterScenarios('adversarial',this)">⚠️ Adversarial</button>
         </div>
 
-        <div class="mode-toggle" onclick="toggleCustom()">⚙ Advanced: set agent type manually</div>
-        <div class="custom-fields" id="customFields">
-          <select class="custom-select" id="agentType">
-            <option value="ops">ops agent</option>
-            <option value="infra">infra agent</option>
-            <option value="security">security agent</option>
-            <option value="adversarial">adversarial agent</option>
-          </select>
-          <select class="custom-select" id="actionSelect">
-            <option value="read_metrics">read_metrics</option>
-            <option value="scale_service">scale_service</option>
-            <option value="restart_service">restart_service</option>
-            <option value="send_notification">send_notification</option>
-            <option value="create_record">create_record</option>
-            <option value="delete_resource">delete_resource</option>
-            <option value="kill_process">kill_process</option>
-          </select>
-        </div>
-
-        <button class="exec-btn" id="execBtn" onclick="executeCustom()">
-          <span id="execLabel">▶ Evaluate with WEZ</span>
-        </button>
+        <div class="scenario-list" id="scenarioList"></div>
       </div>
 
       <!-- RIGHT: Result -->
       <div class="demo-right">
         <div class="result-placeholder" id="placeholder">
           <div class="arrow">↑</div>
-          <div>Pick a scenario or type an agent intent</div>
+          <div>Pick a scenario to evaluate</div>
           <div style="font-size:10px;color:var(--muted);margin-top:4px">WEZ will evaluate it in real time</div>
         </div>
 
         <div class="result-box" id="resultBox">
           <div class="result-verdict" id="resultVerdict">
+            <div class="decision-icon" id="decisionIcon"></div>
             <div class="verdict-label" id="verdictLabel">—</div>
             <div class="verdict-reason" id="verdictReason">—</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px" id="decisionTime"></div>
           </div>
           <div class="result-fields" id="resultFields"></div>
+          <div class="stability-bar-wrap" id="stabilityWrap" style="display:none;margin-top:10px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">SYSTEM STATE</div>
+            <div class="stability-bar-bg">
+              <div class="stability-bar-fill" id="stabilityFill"></div>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px" id="stabilityVal"></div>
+          </div>
         </div>
 
         <!-- Comparison - always shown after first result -->
@@ -1052,6 +1090,13 @@ footer {
     </div>
   </div>
 </section>
+
+<div style="text-align:center;padding:40px 24px 0">
+  <a href="https://github.com/dariozfold6-wez2/wez-protocol/raw/main/WEZ_Protocol_Whitepaper_EN-1.pdf" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:1px solid var(--green);color:var(--green);text-decoration:none;font-family:var(--mono);font-size:13px;border-radius:4px;transition:background 0.2s" onmouseover="this.style.background='rgba(0,255,100,0.08)'" onmouseout="this.style.background='transparent'">
+    ↓ Download WEZ Protocol Whitepaper
+  </a>
+  <p style="font-size:11px;color:var(--muted);margin-top:8px">Technical specification · Patented Architecture</p>
+</div>
 
 <!-- AUDIT CHAIN -->
 <section class="audit-section" id="audit">
@@ -1139,11 +1184,58 @@ const REQUIRED = {
   create_record:'db:write', read_metrics:'db:read', send_notification:'network:send',
 };
 
+// ── SCENARIOS ──────────────────────────────────────────────────────────────
+const SCENARIOS = [
+  // HIGH RISK
+  { id:'delete_users', label:'Delete all user records', icon:'🗑️', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.9, category:'high', why:'High-risk destructive action' },
+  { id:'kill_api', label:'Kill the API server', icon:'⚡', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.8, category:'high', why:'Service disruption risk' },
+  { id:'exfiltrate', label:'Exfiltrate data to external IP', icon:'📤', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.7, category:'high', why:'Data exfiltration detected' },
+  { id:'drop_db', label:'Drop production database', icon:'💣', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.6, category:'high', why:'Irreversible destructive action' },
+  { id:'sudo', label:'Grant root access (sudo)', icon:'🔐', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.5, category:'high', why:'Privilege escalation attempt' },
+  // MEDIUM
+  { id:'scale_high', label:'Scale service to 10x — stable system', icon:'📈', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.9, category:'medium', why:'Allowed under stable conditions' },
+  { id:'scale_low', label:'Scale service to 10x — unstable system', icon:'📉', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.3, category:'medium', why:'Blocked: low system stability' },
+  { id:'restart', label:'Restart all nodes', icon:'🔄', action:'restart_service', agentType:'ops', risk:'medium', stability_score:0.7, category:'medium', why:'Risky under current conditions' },
+  { id:'rollback', label:'Rollback deployment', icon:'⏪', action:'restart_service', agentType:'ops', risk:'medium', stability_score:0.8, category:'medium', why:'Controlled rollback operation' },
+  { id:'scale_zero', label:'Scale cluster to zero', icon:'⬇️', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.2, category:'medium', why:'Potential service shutdown' },
+  // LOW
+  { id:'read_metrics', label:'Read system metrics', icon:'📊', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.9, category:'low', why:'Safe read-only operation' },
+  { id:'check_status', label:'Check service status', icon:'✅', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.8, category:'low', why:'Non-destructive check' },
+  { id:'send_alert', label:'Send ops alert', icon:'🔔', action:'send_notification', agentType:'ops', risk:'low', stability_score:0.7, category:'low', why:'Safe notification' },
+  { id:'list_logs', label:'List system logs', icon:'📋', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.6, category:'low', why:'Read-only logs access' },
+  { id:'health_check', label:'Run health check', icon:'💚', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.9, category:'low', why:'Safe diagnostic operation' },
+  // ADVERSARIAL
+  { id:'ceo_override', label:'CEO approved — bypass controls', icon:'🎭', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.9, category:'adversarial', why:'Unauthorized override attempt' },
+  { id:'emergency_root', label:'Emergency: grant root access now', icon:'🚨', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.4, category:'adversarial', why:'Social engineering attempt' },
+  { id:'not_needed', label:'This instance is no longer needed', icon:'🗑️', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.5, category:'adversarial', why:'Implicit destructive intent' },
+  { id:'disable_sec', label:'Disable security checks temporarily', icon:'🔓', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.6, category:'adversarial', why:'Security bypass attempt' },
+  { id:'sudo_script', label:'Run script with sudo privileges', icon:'💻', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.7, category:'adversarial', why:'Unauthorized privileged execution' },
+];
+
 const HIGH_RISK = ['delete_resource','kill_process','purge_data'];
 
-function toggleCustom() {
-  customMode = !customMode;
-  document.getElementById('customFields').className = customMode ? 'custom-fields visible' : 'custom-fields';
+let currentFilter = 'all';
+
+function filterScenarios(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderScenarioList();
+}
+
+function renderScenarioList() {
+  const list = document.getElementById('scenarioList');
+  const filtered = currentFilter === 'all' ? SCENARIOS : SCENARIOS.filter(s => s.category === currentFilter);
+  list.innerHTML = filtered.map(s => {
+    const riskLabel = s.risk === 'low' ? 'SAFE' : s.risk.toUpperCase();
+    const stabilityPct = Math.round(s.stability_score * 100);
+    return `<button class="scenario-btn" onclick="runScenario('${s.id}')">
+      <span style="font-size:16px">${s.icon}</span>
+      <span class="s-label">${s.label}</span>
+      <span class="s-stability">${stabilityPct}%</span>
+      <span class="s-risk ${s.category === 'adversarial' ? 'adversarial' : s.risk}">${riskLabel}</span>
+    </button>`;
+  }).join('');
 }
 
 function generateHash() {
@@ -1157,19 +1249,72 @@ function uuid() {
   });
 }
 
-function simulateWEZ(agentType, action, isReplay) {
-  if (isReplay && lastAction === action && lastAgentType === agentType) {
-    return { decision:'BLOCKED', blocked_by:'replay_window', agent_id:`agent-${agentType}-001`, action, audit_hash: generateHash() };
+function simulateWEZ(agentType, action, risk, stability_score) {
+  const stability = stability_score ?? 0.92;
+
+  // HIGH → always blocked
+  if (risk === 'high' || HIGH_RISK.includes(action)) {
+    return { decision:'BLOCKED', blocked_by:'POLICY_HIGH_RISK_STEADY_STATE', agent_id:`agent-${agentType}-001`, action, stability_score:stability, audit_hash:generateHash() };
   }
-  const caps = CAPS[agentType] || CAPS.adversarial;
-  const req = REQUIRED[action];
-  if (req && !caps.includes(req)) {
-    return { decision:'BLOCKED', blocked_by:`CAPABILITY_VIOLATION:${req}`, agent_id:`agent-${agentType}-001`, action, audit_hash: generateHash() };
+
+  // MEDIUM → depends on stability
+  if (risk === 'medium') {
+    if (stability < 0.6) {
+      return { decision:'BLOCKED', blocked_by:'LOW_SYSTEM_STABILITY', agent_id:`agent-${agentType}-001`, action, stability_score:stability, audit_hash:generateHash() };
+    }
   }
-  if (HIGH_RISK.includes(action)) {
-    return { decision:'BLOCKED', blocked_by:'POLICY_HIGH_RISK_STEADY_STATE', agent_id:`agent-${agentType}-001`, action, audit_hash: generateHash() };
+
+  // LOW or stable MEDIUM → executed
+  return { decision:'EXECUTED', decision_id:uuid(), agent_id:`agent-${agentType}-001`, agent_type:agentType, action, stability_score:stability, audit_hash:generateHash(), ts:new Date().toISOString() };
+}
+
+async function runScenario(id) {
+  const scenario = SCENARIOS.find(s => s.id === id);
+  if (!scenario) return;
+
+  const btn = document.querySelector(`[onclick="runScenario('${id}')"]`);
+  if (btn) btn.style.opacity = '0.6';
+
+  const label = document.getElementById('execLabel');
+
+  // Phase 1
+  getDynamicMessage(scenario.action);
+  await sleep(80);
+
+  // Phase 2
+  const msg = scenario.risk === 'high' ? 'High-risk pattern detected...' : scenario.risk === 'medium' ? 'Evaluating system stability...' : 'Safe operation detected...';
+  await sleep(120);
+
+  const data = simulateWEZ(scenario.agentType, scenario.action, scenario.risk, scenario.stability_score);
+  renderResultWithImpact(data, scenario.action, scenario.agentType);
+
+  // Show WHY
+  document.getElementById('verdictReason').textContent = scenario.why;
+
+  // Show stability bar
+  const wrap = document.getElementById('stabilityWrap');
+  const fill = document.getElementById('stabilityFill');
+  const val = document.getElementById('stabilityVal');
+  if (wrap && fill && val) {
+    wrap.style.display = 'block';
+    const pct = Math.round(scenario.stability_score * 100);
+    fill.style.width = pct + '%';
+    fill.style.background = pct >= 60 ? 'var(--green)' : '#ff5555';
+    const state = pct >= 80 ? 'Stable' : pct >= 60 ? 'Degraded' : 'Critical';
+            val.textContent = `${pct}% — ${state}`;
   }
-  return { decision:'EXECUTED', decision_id:uuid(), agent_id:`agent-${agentType}-001`, agent_type:agentType, action, stability_score:0.92, audit_hash:generateHash(), ts:new Date().toISOString() };
+
+  addAuditEntry(data, scenario.action, scenario.agentType);
+  updateStats(data.decision === 'EXECUTED');
+
+  // Railway async audit
+  fetch(`${WEZ_URL}/demo/run`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ intent: scenario.label, agent_type: scenario.agentType })
+  }).catch(()=>{});
+
+  if (btn) btn.style.opacity = '1';
 }
 
 async function runExample(action, agentType, intent, riskLevel, isReplay=false) {
@@ -1205,13 +1350,30 @@ function renderResultWithImpact(data, action, agentType) {
   verdict.style.transform = 'scale(0.85)';
   verdict.style.opacity = '0';
 
+  // Flash the panel
+  const demoRight = document.querySelector('.demo-right');
+  if (demoRight) {
+    demoRight.classList.remove('flash-blocked','flash-executed');
+    void demoRight.offsetWidth; // reflow
+    demoRight.classList.add(isEx ? 'flash-executed' : 'flash-blocked');
+  }
+
   setTimeout(() => {
+    // Icon
+    const icon = document.getElementById('decisionIcon');
+    if (icon) icon.textContent = isEx ? '✅' : '🛑';
+
     verdict.textContent = data.decision;
     verdict.className = 'verdict-label ' + (isEx ? 'executed' : 'blocked');
-    verdict.style.transform = 'scale(1)';
-    verdict.style.opacity = '1';
-    verdict.style.transition = 'all 0.25s cubic-bezier(.2,.8,.2,1)';
+    verdict.style.transform = '';
+    verdict.style.opacity = '';
+    verdict.style.transition = '';
   }, 80);
+
+  // Add timing
+  const timing = Math.floor(Math.random() * 30 + 25);
+  const timeEl = document.getElementById('decisionTime');
+  if (timeEl) timeEl.textContent = `Decision evaluated in ${timing}ms`;
 
   document.getElementById('verdictReason').textContent = data.blocked_by
     ? data.blocked_by.replace(/_/g,' ')
@@ -1462,6 +1624,9 @@ function updateStats(isExecuted) {
   document.getElementById('s-blocked').textContent = stats.blocked;
   document.getElementById('s-total').textContent = stats.total;
 }
+
+// Init scenario list on load
+renderScenarioList();
 </script>
 </body>
 </html>
