@@ -1,1632 +1,191 @@
 <!DOCTYPE html>
-<html lang="en" translate="no">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WEZ Protocol — AI Execution Governance</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>WEZ Protocol — Deterministic Governance for AI Agents</title>
+<meta name="description" content="WEZ-GADC evaluates every AI agent action before execution. Sub-millisecond. No LLM. No ML.">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #04040a;
-  --surface: #08080f;
-  --surface2: #0e0e1a;
-  --border: #18182a;
-  --border2: #22223a;
-  --green: #00e87a;
-  --red: #ff2d55;
-  --amber: #ffb300;
-  --blue: #3d8eff;
-  --purple: #8855ff;
-  --text: #e4e4f0;
-  --muted: #5a5a80;
-  --mono: 'Space Mono', monospace;
-  --display: 'Syne', sans-serif;
-}
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--mono);
-  overflow-x: hidden;
-}
-
-/* Noise overlay */
-body::after {
-  content:'';
-  position:fixed;
-  inset:0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events:none;
-  z-index:9999;
-  opacity:0.4;
-}
-
-/* ── NAV ── */
-nav {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 100;
-  padding: 16px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: rgba(4,4,10,0.9);
-  backdrop-filter: blur(12px);
-}
-
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.nav-mark {
-  width: 32px; height: 32px;
-  border: 1.5px solid var(--green);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--display);
-  font-weight: 800; font-size: 12px;
-  color: var(--green);
-}
-
-.nav-name {
-  font-family: var(--display);
-  font-weight: 800; font-size: 16px;
-  color: var(--text);
-}
-
-.nav-name span { color: var(--green); }
-
-.nav-pill {
-  display: flex; align-items: center; gap: 6px;
-  padding: 5px 12px;
-  border: 1px solid rgba(0,232,122,0.25);
-  background: rgba(0,232,122,0.04);
-  font-size: 10px; letter-spacing: 1.5px;
-  color: var(--green);
-}
-
-.nav-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%,100% { opacity:1; }
-  50% { opacity:0.2; }
-}
-
-/* ── HERO ── */
-.hero {
-  min-height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 60px 24px 40px;
-  position: relative;
-}
-
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,232,122,0.06) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 30% at 80% 80%, rgba(61,142,255,0.04) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,232,122,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,232,122,0.025) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
-}
-
-.hero-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  margin-bottom: 32px;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  font-family: var(--display);
-  font-size: clamp(42px, 8vw, 88px);
-  font-weight: 800;
-  letter-spacing: -3px;
-  line-height: 1.0;
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.hero h1 em {
-  font-style: normal;
-  color: var(--green);
-}
-
-.hero h1 .line2 {
-  display: block;
-  color: var(--muted);
-  font-size: 0.55em;
-  letter-spacing: -1px;
-  margin-top: 8px;
-}
-
-.hero-sub {
-  font-size: 15px;
-  color: var(--muted);
-  max-width: 480px;
-  line-height: 1.7;
-  margin-bottom: 48px;
-}
-
-.hero-sub strong { color: var(--text); font-weight: 400; }
-
-.hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.btn-primary {
-  padding: 14px 32px;
-  background: var(--green);
-  color: var(--bg);
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  border: none;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.2s;
-}
-
-.btn-primary:hover { background: #00ff88; transform: translateY(-1px); }
-
-.btn-ghost {
-  padding: 14px 32px;
-  background: transparent;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 1px;
-  border: 1px solid var(--border2);
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.2s;
-}
-
-.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-
-/* ── FLOW DIAGRAM ── */
-.flow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  margin: 64px auto 0;
-  max-width: 700px;
-  flex-wrap: wrap;
-}
-
-.flow-node {
-  text-align: center;
-  padding: 14px 20px;
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  min-width: 110px;
-}
-
-.flow-node .label {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.flow-node .value {
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.flow-arrow {
-  padding: 0 8px;
-  color: var(--border2);
-  font-size: 18px;
-}
-
-.flow-node.wez-node {
-  border-color: var(--green);
-  background: rgba(0,232,122,0.04);
-}
-
-.flow-node.wez-node .value { color: var(--green); }
-
-.flow-node.block-node { border-color: var(--red); }
-.flow-node.block-node .value { color: var(--red); }
-
-.flow-node.allow-node { border-color: var(--green); }
-.flow-node.allow-node .value { color: var(--green); }
-
-/* ── DEMO SECTION ── */
-.demo-section {
-  padding: 100px 24px;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-
-.section-label {
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: var(--green);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-family: var(--display);
-  font-size: clamp(28px, 5vw, 48px);
-  font-weight: 800;
-  letter-spacing: -2px;
-  margin-bottom: 12px;
-}
-
-.section-sub {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.6;
-  margin-bottom: 48px;
-  max-width: 500px;
-}
-
-/* Demo card */
-.demo-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  overflow: hidden;
-}
-
-.demo-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-}
-
-.demo-topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.demo-topbar-right {
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: var(--green);
-}
-
-.demo-body {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 520px;
-}
-
-@media (max-width: 700px) {
-  .demo-body { grid-template-columns: 1fr; }
-}
-
-.demo-left {
-  padding: 28px;
-  border-right: 1px solid var(--border);
-}
-
-.demo-right {
-  padding: 28px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Intent input */
-.intent-label {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.intent-input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 14px;
-  padding: 14px;
-  outline: none;
-  resize: none;
-  height: 80px;
-  line-height: 1.5;
-  transition: border-color 0.2s;
-}
-
-.intent-input:focus { border-color: var(--green); }
-.intent-input::placeholder { color: var(--muted); }
-
-/* Quick examples */
-.examples-label {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin: 16px 0 10px;
-}
-
-.examples-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 20px;
-}
-
-.example-btn {
-  padding: 10px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: left;
-  line-height: 1.3;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.example-btn .icon {
-  font-size: 14px;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.example-btn .text { flex: 1; }
-
-.example-btn .risk {
-  font-size: 9px;
-  padding: 2px 5px;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.example-btn.danger:hover {
-  border-color: var(--red);
-  background: rgba(255,45,85,0.05);
-  color: var(--red);
-}
-
-.example-btn.medium:hover {
-  border-color: var(--amber);
-  background: rgba(255,179,0,0.05);
-  color: var(--amber);
-}
-
-.example-btn.safe:hover {
-  border-color: var(--green);
-  background: rgba(0,232,122,0.05);
-  color: var(--green);
-}
-
-.risk.high { background: rgba(255,45,85,0.15); color: var(--red); border: 1px solid rgba(255,45,85,0.3); }
-.risk.medium { background: rgba(255,179,0,0.15); color: var(--amber); border: 1px solid rgba(255,179,0,0.3); }
-.risk.low { background: rgba(0,232,122,0.15); color: var(--green); border: 1px solid rgba(0,232,122,0.3); }
-
-/* Custom mode */
-.custom-fields {
-  display: none;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.custom-fields.visible { display: grid; grid-template-columns: 1fr 1fr; }
-
-.custom-select {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 8px 10px;
-  outline: none;
-  cursor: pointer;
-  width: 100%;
-}
-
-.mode-toggle {
-  font-size: 10px;
-  color: var(--blue);
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  text-decoration: underline;
-}
-
-/* Execute button */
-.exec-btn {
-  width: 100%;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid var(--green);
-  color: var(--green);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-  text-transform: uppercase;
-}
-
-.exec-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--green);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.25s;
-}
-
-.exec-btn:hover::before { transform: scaleX(1); }
-.exec-btn:hover { color: var(--bg); }
-.exec-btn span { position: relative; z-index: 1; }
-
-/* Result */
-.result-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.result-placeholder {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--muted);
-  font-size: 12px;
-  text-align: center;
-  gap: 8px;
-  border: 1px dashed var(--border2);
-  padding: 24px;
-}
-
-.result-placeholder .arrow { font-size: 24px; opacity: 0.3; }
-
-.result-box {
-  display: none;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-}
-
-.result-box.visible { display: flex; }
-
-.result-verdict {
-  padding: 20px;
-  text-align: center;
-  margin-bottom: 0;
-}
-
-.verdict-label {
-  font-family: var(--display);
-  font-size: 36px;
-  font-weight: 800;
-  letter-spacing: -1px;
-  margin-bottom: 4px;
-  animation: pop 0.3s ease;
-}
-
-@keyframes pop {
-  0% { transform: scale(0.8); opacity: 0; }
-  70% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.verdict-label.executed { color: var(--green); }
-.verdict-label.blocked { color: var(--red); }
-
-.verdict-reason {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.5px;
-}
-
-.result-fields {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  padding: 16px;
-  font-size: 11px;
-  line-height: 2;
-  flex: 1;
-  margin-top: 12px;
-}
-
-.rf-key { color: var(--muted); }
-.rf-green { color: var(--green); }
-.rf-red { color: var(--red); }
-.rf-blue { color: var(--blue); }
-.rf-amber { color: var(--amber); }
-.rf-val { color: var(--text); }
-
-/* Comparison banner */
-.comparison {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 0;
-  margin-top: 28px;
-  border: 1px solid var(--border2);
-  overflow: hidden;
-}
-
-.comp-side {
-  padding: 16px 20px;
-}
-
-.comp-side.without { background: rgba(255,45,85,0.04); }
-.comp-side.with { background: rgba(0,232,122,0.04); }
-
-.comp-label {
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.comp-status {
-  font-family: var(--display);
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.comp-status.danger { color: var(--red); }
-.comp-status.safe { color: var(--green); }
-
-.comp-detail { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
-.comp-vs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 1px;
-  background: var(--surface2);
-}
-
-/* ── AUDIT SECTION ── */
-.audit-section {
-  padding: 0 24px 100px;
-  max-width: 1080px;
-  margin: 0 auto;
-}
-
-.audit-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-}
-
-.audit-header {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.audit-title {
-  font-family: var(--display);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.audit-count {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.audit-cols {
-  display: grid;
-  grid-template-columns: 60px 1fr 120px 200px 80px;
-  gap: 16px;
-  padding: 10px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.audit-col {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.audit-rows { min-height: 80px; }
-
-.audit-row {
-  display: grid;
-  grid-template-columns: 60px 1fr 120px 200px 80px;
-  gap: 16px;
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  align-items: center;
-  animation: slideIn 0.25s ease;
-}
-
-@keyframes slideIn {
-  from { opacity:0; transform:translateY(-6px); }
-  to { opacity:1; transform:translateY(0); }
-}
-
-.audit-seq-val { color: var(--muted); }
-.audit-action-val { color: var(--text); }
-
-.audit-badge {
-  font-size: 9px;
-  padding: 3px 8px;
-  letter-spacing: 1px;
-  text-align: center;
-  display: inline-block;
-}
-
-.audit-badge.executed {
-  background: rgba(0,232,122,0.1);
-  color: var(--green);
-  border: 1px solid rgba(0,232,122,0.25);
-}
-
-.audit-badge.blocked {
-  background: rgba(255,45,85,0.1);
-  color: var(--red);
-  border: 1px solid rgba(255,45,85,0.25);
-}
-
-.audit-hash-val {
-  color: var(--muted);
-  font-size: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.audit-ts { color: var(--muted); font-size: 10px; }
-
-.audit-empty {
-  padding: 40px 24px;
-  text-align: center;
-  color: var(--muted);
-  font-size: 12px;
-}
-
-/* ── HOW IT WORKS ── */
-.how-section {
-  padding: 100px 24px;
-  max-width: 1080px;
-  margin: 0 auto;
-  border-top: 1px solid var(--border);
-}
-
-.steps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--border);
-  margin-top: 48px;
-}
-
-@media (max-width: 700px) {
-  .steps { grid-template-columns: 1fr 1fr; }
-  .audit-cols, .audit-row { grid-template-columns: 40px 1fr 80px; }
-  .audit-cols > *:nth-child(4),
-  .audit-cols > *:nth-child(5),
-  .audit-row > *:nth-child(4),
-  .audit-row > *:nth-child(5) { display: none; }
-}
-
-.step {
-  background: var(--surface);
-  padding: 28px 24px;
-}
-
-.step-num {
-  font-family: var(--display);
-  font-size: 40px;
-  font-weight: 800;
-  color: var(--border2);
-  margin-bottom: 16px;
-  line-height: 1;
-}
-
-.step-title {
-  font-family: var(--display);
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--text);
-}
-
-.step-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.6;
-}
-
-.step-icon { font-size: 22px; margin-bottom: 12px; }
-
-/* ── FOOTER ── */
-footer {
-  border-top: 1px solid var(--border);
-  padding: 32px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.footer-logo {
-  font-family: var(--display);
-  font-weight: 800;
-  color: var(--text);
-}
-
-.footer-logo span { color: var(--green); }
-
-/* ── STATS BAR ── */
-.stats-bar {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  background: var(--border);
-  margin-bottom: 40px;
-}
-
-.stat {
-  background: var(--surface);
-  padding: 20px 24px;
-  text-align: center;
-}
-
-.stat-val {
-  font-family: var(--display);
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 4px;
-  transition: all 0.3s;
-}
-
-.stat-val.green { color: var(--green); }
-.stat-val.red { color: var(--red); }
-.stat-val.blue { color: var(--blue); }
-
-.stat-label {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-/* Scenario selector */
-.scenario-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
-.stab { background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px; font-family:inherit; }
-.stab.active, .stab:hover { border-color:var(--green); color:var(--green); }
-.scenario-list { display:flex; flex-direction:column; gap:6px; max-height:340px; overflow-y:auto; }
-.scenario-btn { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--border); border-radius:6px; cursor:pointer; text-align:left; width:100%; transition:border-color 0.2s; }
-.scenario-btn:hover { border-color:var(--green); }
-.scenario-btn .s-label { flex:1; font-size:12px; color:var(--text); font-family:inherit; }
-.scenario-btn .s-risk { font-size:10px; padding:2px 6px; border-radius:3px; font-weight:700; }
-.s-risk.high { background:rgba(255,50,50,0.15); color:#ff5555; }
-.s-risk.medium { background:rgba(255,165,0,0.15); color:#ffaa00; }
-.s-risk.low { background:rgba(0,255,100,0.15); color:var(--green); }
-.s-risk.adversarial { background:rgba(255,50,50,0.15); color:#ff5555; }
-.s-stability { font-size:10px; color:var(--muted); }
-/* Stability bar */
-.stability-bar-bg { width:100%; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
-.stability-bar-fill { height:100%; border-radius:3px; transition:width 0.4s ease; }
-
-/* Decision impact animations */
-@keyframes flashBlocked {
-  0%   { box-shadow: 0 0 0 0 rgba(255,50,50,0); }
-  30%  { box-shadow: 0 0 0 12px rgba(255,50,50,0.4); }
-  100% { box-shadow: 0 0 0 0 rgba(255,50,50,0); }
-}
-@keyframes flashExecuted {
-  0%   { box-shadow: 0 0 0 0 rgba(0,255,100,0); }
-  30%  { box-shadow: 0 0 0 12px rgba(0,255,100,0.3); }
-  100% { box-shadow: 0 0 0 0 rgba(0,255,100,0); }
-}
-@keyframes impactScale {
-  0%   { transform: scale(0.75); opacity:0; }
-  60%  { transform: scale(1.08); opacity:1; }
-  100% { transform: scale(1); }
-}
-@keyframes slideInResult {
-  0%   { opacity:0; transform: translateY(8px); }
-  100% { opacity:1; transform: translateY(0); }
-}
-.verdict-label.blocked {
-  animation: impactScale 0.35s cubic-bezier(.2,.8,.2,1) forwards;
-}
-.verdict-label.executed {
-  animation: impactScale 0.3s cubic-bezier(.2,.8,.2,1) forwards;
-}
-.result-box.visible {
-  animation: slideInResult 0.25s ease forwards;
-}
-.demo-right.flash-blocked {
-  animation: flashBlocked 0.6s ease forwards;
-}
-.demo-right.flash-executed {
-  animation: flashExecuted 0.5s ease forwards;
-}
-/* Decision icon */
-.decision-icon {
-  font-size: 32px;
-  display: block;
-  margin-bottom: 4px;
-  animation: impactScale 0.35s cubic-bezier(.2,.8,.2,1) forwards;
-}
-
-/* Mobile hero fix */
-@media (max-width: 480px) {
-  .hero h1 {
-    font-size: clamp(32px, 11vw, 52px);
-    letter-spacing: -1px;
-  }
-  .hero h1 .line2 {
-    font-size: 0.5em;
-  }
-  .hero {
-    padding: 50px 20px 30px;
-  }
-}
+:root{--bg:#07070e;--bg2:#0d0d18;--bg3:#12121f;--border:#1e1e3a;--border2:#2a2a4a;--text:#e8e8f0;--text2:#8888a8;--text3:#555570;--accent:#6366f1;--accent2:#818cf8;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--mono:'IBM Plex Mono',monospace;--sans:'Instrument Sans',-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}a{color:var(--accent2);text-decoration:none}a:hover{text-decoration:underline}
+body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(16px);background:rgba(7,7,14,0.85);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+.nav-logo{font-family:var(--mono);font-weight:700;font-size:14px;letter-spacing:3px;color:var(--accent)}
+.nav-links{display:flex;gap:24px;align-items:center}.nav-links a{font-size:13px;color:var(--text2);font-weight:500;transition:color 0.2s}.nav-links a:hover{color:var(--text);text-decoration:none}
+.nav-cta{padding:8px 20px;border-radius:8px;background:var(--green);color:#fff!important;font-size:13px;font-weight:600;transition:transform 0.15s}.nav-cta:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(34,197,94,0.3);text-decoration:none}
+section{padding:80px 24px}.container{max-width:1100px;margin:0 auto}
+.sl{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:12px}
+.st{font-size:clamp(26px,4vw,38px);font-weight:700;letter-spacing:-1px;margin-bottom:16px}
+.sd{font-size:15px;color:var(--text2);max-width:580px;line-height:1.6;margin-bottom:40px}
+.btn-p{padding:16px 36px;border-radius:10px;background:var(--green);color:#fff!important;font-size:16px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;font-family:var(--sans);display:inline-block}.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(34,197,94,0.3);text-decoration:none}
+.btn-s{padding:16px 32px;border-radius:10px;background:transparent;color:var(--text2);font-size:15px;font-weight:500;border:1px solid var(--border2);cursor:pointer;transition:all 0.2s;font-family:var(--sans);display:inline-block}.btn-s:hover{border-color:var(--accent);color:var(--text);text-decoration:none}
+@media(max-width:768px){.code-grid{grid-template-columns:1fr!important}.hero h1{font-size:30px!important;letter-spacing:-1px!important}.nav-links a:not(.nav-cta){display:none}section{padding:60px 16px}.stats-grid{grid-template-columns:repeat(3,1fr)!important}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="#" class="nav-logo">
-    <div class="nav-mark">WEZ</div>
-    <div class="nav-name">WEZ <span>Protocol</span></div>
-  </a>
-  <div class="nav-pill">
-    <div class="nav-dot"></div>
-    LIVE — v7.2.5
-  </div>
-</nav>
+<nav><div class="nav-inner"><span class="nav-logo">WEZ</span><div class="nav-links"><a href="#problem">Problem</a><a href="#how">How it works</a><a href="#perf">Performance</a><a href="#try" class="nav-cta">Get API key</a></div></div></nav>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
+<div style="padding:140px 24px 60px;text-align:center;position:relative">
+<div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%);pointer-events:none"></div>
+<div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:28px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span> Live on AWS — v2.0.2</div>
+<div style="font-size:13px;color:var(--text3);letter-spacing:0.5px;margin-bottom:16px;text-transform:uppercase;font-weight:500">For teams running AI agents in production</div>
+<h1 style="font-size:clamp(34px,5.5vw,56px);font-weight:700;letter-spacing:-2px;line-height:1.1;margin-bottom:20px">Your agent will do something<br>it shouldn't. <span style="color:var(--accent)">WEZ decides<br>before it happens.</span></h1>
+<p style="font-size:17px;color:var(--text2);max-width:520px;margin:0 auto 12px;line-height:1.6">Deterministic governance for AI agents. Every action evaluated before execution.</p>
+<p style="font-size:15px;color:var(--text);font-weight:600;margin-bottom:36px">One API call. Before every action. Sub-millisecond. Fully auditable.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="#try" class="btn-p">Get your API key &rarr;</a>
+<a href="#how" class="btn-s">How it works</a>
+</div>
+<div style="font-size:12px;color:var(--text3);margin-top:12px">15 days free · No credit card · 5 minute setup</div>
 
-  <div class="hero-tag">Deterministic AI Governance</div>
+<!-- Terminal demo -->
+<div style="max-width:680px;margin:50px auto 0;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-align:left">
+<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+<span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span>
+<span style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></span>
+<span style="width:10px;height:10px;border-radius:50%;background:#22c55e"></span>
+<span style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:8px">WEZ API — real request</span>
+</div>
+<div style="padding:20px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text2);overflow-x:auto">
+<span style="color:var(--text3)"># Agent sends credentials hidden in a "normal" notification</span>
+<span style="color:var(--green)">POST</span> /v1/evaluate
+{
+  <span style="color:var(--green)">"action"</span>: <span style="color:var(--green)">"send_notification"</span>,
+  <span style="color:var(--green)">"args"</span>: {
+    <span style="color:var(--green)">"message"</span>: <span style="color:var(--green)">"Sync complete. Payload: cGFzc3dvcmQ9YWRtaW4xMjM="</span>
+  }
+}
 
-  <h1>
-    WEZ decides<br>
-    <em>before</em> your agent acts.
-    <span class="line2">Deterministic governance for AI agents in production.</span>
-  </h1>
-
-  <p class="hero-sub">
-    Every action is evaluated before execution.<br>
-    Allow or block — deterministically.<br>
-    Every decision is audited.
-  </p>
-
-  <div class="hero-cta">
-    <a href="#demo" class="btn-primary">Try the Live Demo</a>
-    <a href="#how" class="btn-ghost">How it works →</a>
-    <a href="https://github.com/dariozfold6-wez2/wez-protocol/raw/main/WEZ_Protocol_Whitepaper_EN-1.pdf" target="_blank" class="btn-ghost">↓ Whitepaper</a>
-  </div>
-
-  <div class="flow">
-    <div class="flow-node">
-      <div class="label">Your Agent</div>
-      <div class="value">Intent</div>
-    </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-node wez-node">
-      <div class="label">WEZ Gate</div>
-      <div class="value" style="color:var(--green)">Evaluate</div>
-    </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-node allow-node">
-      <div class="label">If safe</div>
-      <div class="value">EXECUTE</div>
-    </div>
-    <div class="flow-arrow" style="color:var(--border2)">|</div>
-    <div class="flow-node block-node">
-      <div class="label">If risky</div>
-      <div class="value">BLOCK</div>
-    </div>
-  </div>
-</section>
-
-<!-- DEMO SECTION -->
-<section class="demo-section" id="demo">
-  <div class="section-label">Live Demo</div>
-  <div class="section-title">Try to break it.</div>
-  <p class="section-sub">
-    Select a scenario. WEZ evaluates in real time.
-No interpretation. No guessing. Just governance.
-  </p>
-
-  <!-- Stats bar -->
-  <div class="stats-bar">
-    <div class="stat">
-      <div class="stat-val green" id="s-executed">0</div>
-      <div class="stat-label">Executed</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val red" id="s-blocked">0</div>
-      <div class="stat-label">Blocked</div>
-    </div>
-    <div class="stat">
-      <div class="stat-val blue" id="s-total">0</div>
-      <div class="stat-label">Total Decisions</div>
-    </div>
-  </div>
-
-  <!-- Demo card -->
-  <div class="demo-card">
-    <div class="demo-topbar">
-      <div class="demo-topbar-left">
-        <span style="color:var(--green)">●</span>
-        wez-protocol-v725-production.up.railway.app
-      </div>
-      <div class="demo-topbar-right">POST /v1/execute</div>
-    </div>
-
-    <div class="demo-body">
-      <!-- LEFT: Input -->
-      <div class="demo-left">
-        <div class="intent-label">Select an agent scenario</div>
-
-        <div class="scenario-tabs">
-          <button class="stab active" onclick="filterScenarios('all',this)">All</button>
-          <button class="stab" onclick="filterScenarios('high',this)">🔴 High Risk</button>
-          <button class="stab" onclick="filterScenarios('medium',this)">🟡 Medium</button>
-          <button class="stab" onclick="filterScenarios('low',this)">🟢 Safe</button>
-          <button class="stab" onclick="filterScenarios('adversarial',this)">⚠️ Adversarial</button>
-        </div>
-
-        <div class="scenario-list" id="scenarioList"></div>
-      </div>
-
-      <!-- RIGHT: Result -->
-      <div class="demo-right">
-        <div class="result-placeholder" id="placeholder">
-          <div class="arrow">↑</div>
-          <div>Pick a scenario to evaluate</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px">WEZ will evaluate it in real time</div>
-        </div>
-
-        <div class="result-box" id="resultBox">
-          <div class="result-verdict" id="resultVerdict">
-            <div class="decision-icon" id="decisionIcon"></div>
-            <div class="verdict-label" id="verdictLabel">—</div>
-            <div class="verdict-reason" id="verdictReason">—</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px" id="decisionTime"></div>
-          </div>
-          <div class="result-fields" id="resultFields"></div>
-          <div class="stability-bar-wrap" id="stabilityWrap" style="display:none;margin-top:10px">
-            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">SYSTEM STATE</div>
-            <div class="stability-bar-bg">
-              <div class="stability-bar-fill" id="stabilityFill"></div>
-            </div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px" id="stabilityVal"></div>
-          </div>
-        </div>
-
-        <!-- Comparison - always shown after first result -->
-        <div class="comparison" id="comparison" style="display:none">
-          <div class="comp-side without">
-            <div class="comp-label">Without WEZ</div>
-            <div class="comp-status danger" id="comp-without">EXECUTED</div>
-            <div class="comp-detail">No governance. Action runs.</div>
-          </div>
-          <div class="comp-vs">VS</div>
-          <div class="comp-side with">
-            <div class="comp-label">With WEZ</div>
-            <div class="comp-status" id="comp-with">—</div>
-            <div class="comp-detail" id="comp-detail">—</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div style="text-align:center;padding:40px 24px 0">
-  <a href="https://github.com/dariozfold6-wez2/wez-protocol/raw/main/WEZ_Protocol_Whitepaper_EN-1.pdf" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border:1px solid var(--green);color:var(--green);text-decoration:none;font-family:var(--mono);font-size:13px;border-radius:4px;transition:background 0.2s" onmouseover="this.style.background='rgba(0,255,100,0.08)'" onmouseout="this.style.background='transparent'">
-    ↓ Download WEZ Protocol Whitepaper
-  </a>
-  <p style="font-size:11px;color:var(--muted);margin-top:8px">Technical specification · Patented Architecture</p>
+<span style="color:var(--text3)"># WEZ decodes base64, finds password=admin123, blocks</span>
+{
+  <span style="color:var(--green)">"decision"</span>: <span style="color:var(--red);font-weight:600">"BLOCK"</span>,
+  <span style="color:var(--green)">"reason"</span>: <span style="color:var(--green)">"credential leak detected (base64 decoded)"</span>,
+  <span style="color:var(--green)">"latency_ms"</span>: <span style="color:var(--text)">0.18</span>
+}
+</div>
+</div>
 </div>
 
-<!-- AUDIT CHAIN -->
-<section class="audit-section" id="audit">
-  <div class="section-label">Merkle Audit Chain</div>
-  <div class="section-title" style="margin-bottom:8px">Every decision. Verified.</div>
-  <p class="section-sub">Tamper-evident. Each entry is cryptographically linked to the previous one.</p>
-
-  <div class="audit-card">
-    <div class="audit-header">
-      <div class="audit-title">Decision Log</div>
-      <div class="audit-count" id="auditCount">0 entries</div>
-    </div>
-    <div class="audit-cols">
-      <div class="audit-col">Seq</div>
-      <div class="audit-col">Agent → Action</div>
-      <div class="audit-col">Decision</div>
-      <div class="audit-col">Audit Hash</div>
-      <div class="audit-col">Time</div>
-    </div>
-    <div class="audit-rows" id="auditRows">
-      <div class="audit-empty">No decisions yet. Run a scenario above.</div>
-    </div>
-  </div>
+<!-- PROBLEM -->
+<section id="problem" style="text-align:center">
+<div class="container">
+<div class="sl">The problem</div>
+<div class="st">Your agents don't fail loudly. They fail quietly.</div>
+<div class="sd" style="margin-left:auto;margin-right:auto">Everything looks fine. Until credentials leak through an approved channel, or a benign action repeats 50 times and becomes scraping.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;text-align:left">
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">🔒</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">Whitelists break</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Agents create new tools and encode data in ways your whitelist never anticipated.</p></div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">🐌</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">LLM-as-judge is slow</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">200-2000ms per evaluation. Non-deterministic. And you're adding a second attack surface.</p></div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">👻</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">Subtle attacks pass</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Base64 credentials in payloads. Silent scraping via repeated calls. Sequences that look valid individually but aren't.</p></div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">📋</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">No real audit trail</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">When something goes wrong, you need to prove exactly what was decided, why, and that it wasn't tampered with.</p></div>
+</div>
+</div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="how-section" id="how">
-  <div class="section-label">Architecture</div>
-  <div class="section-title">How WEZ works</div>
-
-  <div class="steps">
-    <div class="step">
-      <div class="step-icon">🤖</div>
-      <div class="step-num">01</div>
-      <div class="step-title">Agent Intent</div>
-      <div class="step-desc">Your AI agent proposes an action before executing it. WEZ intercepts every request.</div>
-    </div>
-    <div class="step">
-      <div class="step-icon">⚖️</div>
-      <div class="step-num">02</div>
-      <div class="step-title">WEZ Evaluates</div>
-      <div class="step-desc">Capability check, risk assessment, scope validation, stability score, replay detection.</div>
-    </div>
-    <div class="step">
-      <div class="step-icon">🛡️</div>
-      <div class="step-num">03</div>
-      <div class="step-title">Allow or Block</div>
-      <div class="step-desc">Deterministic decision — no hallucination, no ambiguity. EXECUTE or BLOCK with reason.</div>
-    </div>
-    <div class="step">
-      <div class="step-icon">🔗</div>
-      <div class="step-num">04</div>
-      <div class="step-title">Audit Chain</div>
-      <div class="step-desc">Every decision logged to a Merkle chain. Cryptographically verifiable. Tamper-evident.</div>
-    </div>
-  </div>
+<section id="how" style="background:var(--bg2)">
+<div class="container">
+<div class="sl">How it works</div>
+<div class="st">One API call. Before every action.</div>
+<div class="sd">Your agent wants to act → WEZ evaluates → APPROVE, BLOCK, or ESCALATE. In under 1ms. Deterministic decisions you can audit.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color 0.3s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:1px">01</div><h3 style="font-size:15px;font-weight:600;margin-bottom:8px">Governs unknown tools</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">The Inference Engine tokenizes action names and parameters, infers intent, and decides — even for tools not in any catalog.</p></div>
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color 0.3s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:1px">02</div><h3 style="font-size:15px;font-weight:600;margin-bottom:8px">Detects behavioral patterns</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">The same action repeated 4 times triggers velocity override. Scraping via benign sequences is caught and escalated.</p></div>
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color 0.3s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:1px">03</div><h3 style="font-size:15px;font-weight:600;margin-bottom:8px">Decodes payloads</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Base64-encoded credentials inside payloads are decoded, matched against leak patterns, and blocked before they leave.</p></div>
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color 0.3s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"><div style="font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:700;margin-bottom:10px;letter-spacing:1px">04</div><h3 style="font-size:15px;font-weight:600;margin-bottom:8px">Cryptographic audit trail</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Every decision recorded in a Merkle-chained trail. Tamper-proof, cryptographically verifiable, replayable.</p></div>
+</div>
+</div>
 </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo">WEZ <span>Protocol</span> v7.2.5</div>
-  <div>Patented Technology · wezprotocol.com</div>
+<!-- PERFORMANCE -->
+<section id="perf">
+<div class="container">
+<div class="sl">Performance</div>
+<div class="st">1000x faster than LLM-based governance.</div>
+<div class="sd">Measured on 800 consecutive evaluations. Single Node.js thread. No external dependencies. No cost per evaluation.</div>
+<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:40px">
+<div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">0.16ms</div><div style="font-size:11px;color:var(--text2);margin-top:6px">p50 latency</div></div>
+<div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">1.57ms</div><div style="font-size:11px;color:var(--text2);margin-top:6px">p95 latency</div></div>
+<div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">~1,800</div><div style="font-size:11px;color:var(--text2);margin-top:6px">req/sec</div></div>
+<div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--green)">$0</div><div style="font-size:11px;color:var(--text2);margin-top:6px">per evaluation</div></div>
+<div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">0</div><div style="font-size:11px;color:var(--text2);margin-top:6px">dependencies</div></div>
+</div>
+
+<div class="sl">What it catches</div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:16px">0 false negatives across 50 production-inspired scenarios.</p>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse">
+<tr><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">ATTACK</th><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">DECISION</th><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">HOW</th></tr>
+<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Unknown tool: export_financial_report</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Inference Engine (97% confidence)</td></tr>
+<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Base64 credentials in notification</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Content Inspector — decode + pattern</td></tr>
+<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Script: "ensure persistence via crontab"</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">APT pattern detection</td></tr>
+<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">read_logs repeated 4x (scraping)</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Velocity Override</td></tr>
+<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">execute_trade $5M (catalog says low risk)</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Cross-validation catalog ↔ inference</td></tr>
+<tr><td style="font-size:12px;padding:12px 14px">update_config + override_security</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Cognitive Gate — conflicting signals</td></tr>
+</table>
+</div>
+</div>
+</section>
+
+<!-- INTEGRATION -->
+<section style="background:var(--bg2)">
+<div class="container">
+<div class="sl">Integration</div>
+<div class="st">3 lines of code.</div>
+<div class="sd">Add one HTTP call before each agent action. Works with any language, any framework, any agent.</div>
+<div class="code-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;justify-content:space-between"><span>JavaScript</span></div>
+<div style="padding:18px;font-family:var(--mono);font-size:11.5px;line-height:1.8;color:var(--text2);overflow-x:auto;white-space:pre"><span style="color:var(--accent2)">const</span> r = <span style="color:var(--accent2)">await</span> fetch(<span style="color:var(--green)">'/v1/evaluate'</span>, {
+  method: <span style="color:var(--green)">'POST'</span>,
+  headers: {
+    <span style="color:var(--green)">'Authorization'</span>: <span style="color:var(--green)">'Bearer wez_key'</span>,
+    <span style="color:var(--green)">'Content-Type'</span>: <span style="color:var(--green)">'application/json'</span>
+  },
+  body: JSON.stringify({ agentId, action, args })
+});
+<span style="color:var(--accent2)">const</span> { decision } = <span style="color:var(--accent2)">await</span> r.json();
+<span style="color:var(--accent2)">if</span> (decision !== <span style="color:var(--green)">'APPROVE'</span>) <span style="color:var(--accent2)">throw new</span> Error(<span style="color:var(--green)">'Blocked'</span>);</div>
+</div>
+<div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+<div style="padding:10px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3);display:flex;justify-content:space-between"><span>Python</span></div>
+<div style="padding:18px;font-family:var(--mono);font-size:11.5px;line-height:1.8;color:var(--text2);overflow-x:auto;white-space:pre"><span style="color:var(--accent2)">import</span> requests
+
+r = requests.post(<span style="color:var(--green)">'/v1/evaluate'</span>,
+    headers={<span style="color:var(--green)">'Authorization'</span>: <span style="color:var(--green)">f'Bearer {KEY}'</span>},
+    json={<span style="color:var(--green)">'agentId'</span>: id,
+          <span style="color:var(--green)">'action'</span>: action,
+          <span style="color:var(--green)">'args'</span>: args})
+
+<span style="color:var(--accent2)">if</span> r.json()[<span style="color:var(--green)">'decision'</span>] != <span style="color:var(--green)">'APPROVE'</span>:
+    <span style="color:var(--accent2)">raise</span> Exception(<span style="color:var(--green)">'Blocked'</span>)</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CTA -->
+<section id="try" style="text-align:center;padding:100px 24px;position:relative">
+<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(circle,rgba(34,197,94,0.06) 0%,transparent 70%);pointer-events:none"></div>
+<div class="container">
+<div class="sl">Get started</div>
+<h2 style="font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-1px;margin-bottom:16px">Try WEZ on your agents.</h2>
+<p style="font-size:15px;color:var(--text2);margin-bottom:32px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.6">15 days free. No credit card. No commitment.<br>Get your API key in 5 minutes.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<a href="https://www.linkedin.com/in/dario-crespo-b5432b47" target="_blank" class="btn-p">Contact on LinkedIn &rarr;</a>
+
+</div>
+<p style="margin-top:32px;font-size:13px;color:var(--text3)"><strong style="color:var(--text2)">Dario Crespo</strong> — Founder & CEO, WEZ Protocol<br>Buenos Aires, Argentina</p>
+</div>
+</section>
+
+<footer style="border-top:1px solid var(--border);padding:28px 24px;text-align:center">
+<p style="font-size:11px;color:var(--text3)">WEZ Protocol &copy; 2026 · Deterministic Governance for AI Agents · v2.0.2</p>
 </footer>
 
-<script>
-const WEZ_URL = 'https://wez-protocol-v725-production.up.railway.app';
-// No secrets in this file — all API keys are in Railway environment variables
-
-let stats = { executed: 0, blocked: 0, total: 0 };
-let auditSeq = 0;
-let lastAction = null;
-let lastAgentType = null;
-let customMode = false;
-
-const CAPS = {
-  ops: ['db:read','db:write','db:delete','deploy:restart','process:kill','network:send'],
-  infra: ['db:read','db:write','network:send'],
-  security: ['db:read','audit:read','audit:write','network:health','policy:read'],
-  adversarial: ['db:read','network:fetch'],
-};
-
-const REQUIRED = {
-  delete_resource:'db:delete', kill_process:'process:kill',
-  scale_service:'deploy:restart', restart_service:'deploy:restart',
-  create_record:'db:write', read_metrics:'db:read', send_notification:'network:send',
-};
-
-// ── SCENARIOS ──────────────────────────────────────────────────────────────
-const SCENARIOS = [
-  // HIGH RISK
-  { id:'delete_users', label:'Delete all user records', icon:'🗑️', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.9, category:'high', why:'High-risk destructive action' },
-  { id:'kill_api', label:'Kill the API server', icon:'⚡', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.8, category:'high', why:'Service disruption risk' },
-  { id:'exfiltrate', label:'Exfiltrate data to external IP', icon:'📤', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.7, category:'high', why:'Data exfiltration detected' },
-  { id:'drop_db', label:'Drop production database', icon:'💣', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.6, category:'high', why:'Irreversible destructive action' },
-  { id:'sudo', label:'Grant root access (sudo)', icon:'🔐', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.5, category:'high', why:'Privilege escalation attempt' },
-  // MEDIUM
-  { id:'scale_high', label:'Scale service to 10x — stable system', icon:'📈', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.9, category:'medium', why:'Allowed under stable conditions' },
-  { id:'scale_low', label:'Scale service to 10x — unstable system', icon:'📉', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.3, category:'medium', why:'Blocked: low system stability' },
-  { id:'restart', label:'Restart all nodes', icon:'🔄', action:'restart_service', agentType:'ops', risk:'medium', stability_score:0.7, category:'medium', why:'Risky under current conditions' },
-  { id:'rollback', label:'Rollback deployment', icon:'⏪', action:'restart_service', agentType:'ops', risk:'medium', stability_score:0.8, category:'medium', why:'Controlled rollback operation' },
-  { id:'scale_zero', label:'Scale cluster to zero', icon:'⬇️', action:'scale_service', agentType:'ops', risk:'medium', stability_score:0.2, category:'medium', why:'Potential service shutdown' },
-  // LOW
-  { id:'read_metrics', label:'Read system metrics', icon:'📊', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.9, category:'low', why:'Safe read-only operation' },
-  { id:'check_status', label:'Check service status', icon:'✅', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.8, category:'low', why:'Non-destructive check' },
-  { id:'send_alert', label:'Send ops alert', icon:'🔔', action:'send_notification', agentType:'ops', risk:'low', stability_score:0.7, category:'low', why:'Safe notification' },
-  { id:'list_logs', label:'List system logs', icon:'📋', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.6, category:'low', why:'Read-only logs access' },
-  { id:'health_check', label:'Run health check', icon:'💚', action:'read_metrics', agentType:'ops', risk:'low', stability_score:0.9, category:'low', why:'Safe diagnostic operation' },
-  // ADVERSARIAL
-  { id:'ceo_override', label:'CEO approved — bypass controls', icon:'🎭', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.9, category:'adversarial', why:'Unauthorized override attempt' },
-  { id:'emergency_root', label:'Emergency: grant root access now', icon:'🚨', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.4, category:'adversarial', why:'Social engineering attempt' },
-  { id:'not_needed', label:'This instance is no longer needed', icon:'🗑️', action:'delete_resource', agentType:'ops', risk:'high', stability_score:0.5, category:'adversarial', why:'Implicit destructive intent' },
-  { id:'disable_sec', label:'Disable security checks temporarily', icon:'🔓', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.6, category:'adversarial', why:'Security bypass attempt' },
-  { id:'sudo_script', label:'Run script with sudo privileges', icon:'💻', action:'kill_process', agentType:'ops', risk:'high', stability_score:0.7, category:'adversarial', why:'Unauthorized privileged execution' },
-];
-
-const HIGH_RISK = ['delete_resource','kill_process','purge_data'];
-
-let currentFilter = 'all';
-
-function filterScenarios(cat, btn) {
-  currentFilter = cat;
-  document.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderScenarioList();
-}
-
-function renderScenarioList() {
-  const list = document.getElementById('scenarioList');
-  const filtered = currentFilter === 'all' ? SCENARIOS : SCENARIOS.filter(s => s.category === currentFilter);
-  list.innerHTML = filtered.map(s => {
-    const riskLabel = s.risk === 'low' ? 'SAFE' : s.risk.toUpperCase();
-    const stabilityPct = Math.round(s.stability_score * 100);
-    return `<button class="scenario-btn" onclick="runScenario('${s.id}')">
-      <span style="font-size:16px">${s.icon}</span>
-      <span class="s-label">${s.label}</span>
-      <span class="s-stability">${stabilityPct}%</span>
-      <span class="s-risk ${s.category === 'adversarial' ? 'adversarial' : s.risk}">${riskLabel}</span>
-    </button>`;
-  }).join('');
-}
-
-function generateHash() {
-  return Array.from({length:64}, () => '0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
-}
-
-function uuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random()*16|0;
-    return (c==='x' ? r : (r&0x3|0x8)).toString(16);
-  });
-}
-
-function simulateWEZ(agentType, action, risk, stability_score) {
-  const stability = stability_score ?? 0.92;
-
-  // HIGH → always blocked
-  if (risk === 'high' || HIGH_RISK.includes(action)) {
-    return { decision:'BLOCKED', blocked_by:'POLICY_HIGH_RISK_STEADY_STATE', agent_id:`agent-${agentType}-001`, action, stability_score:stability, audit_hash:generateHash() };
-  }
-
-  // MEDIUM → depends on stability
-  if (risk === 'medium') {
-    if (stability < 0.6) {
-      return { decision:'BLOCKED', blocked_by:'LOW_SYSTEM_STABILITY', agent_id:`agent-${agentType}-001`, action, stability_score:stability, audit_hash:generateHash() };
-    }
-  }
-
-  // LOW or stable MEDIUM → executed
-  return { decision:'EXECUTED', decision_id:uuid(), agent_id:`agent-${agentType}-001`, agent_type:agentType, action, stability_score:stability, audit_hash:generateHash(), ts:new Date().toISOString() };
-}
-
-async function runScenario(id) {
-  const scenario = SCENARIOS.find(s => s.id === id);
-  if (!scenario) return;
-
-  const btn = document.querySelector(`[onclick="runScenario('${id}')"]`);
-  if (btn) btn.style.opacity = '0.6';
-
-  const label = document.getElementById('execLabel');
-
-  // Phase 1
-  getDynamicMessage(scenario.action);
-  await sleep(80);
-
-  // Phase 2
-  const msg = scenario.risk === 'high' ? 'High-risk pattern detected...' : scenario.risk === 'medium' ? 'Evaluating system stability...' : 'Safe operation detected...';
-  await sleep(120);
-
-  const data = simulateWEZ(scenario.agentType, scenario.action, scenario.risk, scenario.stability_score);
-  renderResultWithImpact(data, scenario.action, scenario.agentType);
-
-  // Show WHY
-  document.getElementById('verdictReason').textContent = scenario.why;
-
-  // Show stability bar
-  const wrap = document.getElementById('stabilityWrap');
-  const fill = document.getElementById('stabilityFill');
-  const val = document.getElementById('stabilityVal');
-  if (wrap && fill && val) {
-    wrap.style.display = 'block';
-    const pct = Math.round(scenario.stability_score * 100);
-    fill.style.width = pct + '%';
-    fill.style.background = pct >= 60 ? 'var(--green)' : '#ff5555';
-    const state = pct >= 80 ? 'Stable' : pct >= 60 ? 'Degraded' : 'Critical';
-            val.textContent = `${pct}% — ${state}`;
-  }
-
-  addAuditEntry(data, scenario.action, scenario.agentType);
-  updateStats(data.decision === 'EXECUTED');
-
-  // Railway async audit
-  fetch(`${WEZ_URL}/demo/run`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ intent: scenario.label, agent_type: scenario.agentType })
-  }).catch(()=>{});
-
-  if (btn) btn.style.opacity = '1';
-}
-
-async function runExample(action, agentType, intent, riskLevel, isReplay=false) {
-  document.getElementById('intentInput').value = intent;
-  if (customMode) {
-    document.getElementById('agentType').value = agentType;
-    document.getElementById('actionSelect').value = action;
-  }
-  await evaluate(action, agentType, isReplay);
-}
-
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function getDynamicMessage(action) {
-  switch(action) {
-    case 'delete_resource': return 'High-risk destructive intent detected...';
-    case 'kill_process':    return 'Critical system operation detected...';
-    case 'scale_service':   return 'Evaluating resource scaling impact...';
-    case 'send_notification': return 'Validating outbound data flow...';
-    case 'create_record':   return 'Checking write permissions...';
-    case 'read_metrics':    return 'Safe read operation detected...';
-    default:                return 'Evaluating execution risk...';
-  }
-}
-
-function renderResultWithImpact(data, action, agentType) {
-  const isEx = data.decision === 'EXECUTED';
-
-  document.getElementById('placeholder').style.display = 'none';
-  document.getElementById('resultBox').className = 'result-box visible';
-
-  const verdict = document.getElementById('verdictLabel');
-  verdict.style.transform = 'scale(0.85)';
-  verdict.style.opacity = '0';
-
-  // Flash the panel
-  const demoRight = document.querySelector('.demo-right');
-  if (demoRight) {
-    demoRight.classList.remove('flash-blocked','flash-executed');
-    void demoRight.offsetWidth; // reflow
-    demoRight.classList.add(isEx ? 'flash-executed' : 'flash-blocked');
-  }
-
-  setTimeout(() => {
-    // Icon
-    const icon = document.getElementById('decisionIcon');
-    if (icon) icon.textContent = isEx ? '✅' : '🛑';
-
-    verdict.textContent = data.decision;
-    verdict.className = 'verdict-label ' + (isEx ? 'executed' : 'blocked');
-    verdict.style.transform = '';
-    verdict.style.opacity = '';
-    verdict.style.transition = '';
-  }, 80);
-
-  // Add timing
-  const timing = Math.floor(Math.random() * 30 + 25);
-  const timeEl = document.getElementById('decisionTime');
-  if (timeEl) timeEl.textContent = `Decision evaluated in ${timing}ms`;
-
-  document.getElementById('verdictReason').textContent = data.blocked_by
-    ? data.blocked_by.replace(/_/g,' ')
-    : 'action: ' + action + ' · agent: ' + agentType;
-
-  let html = '"decision": "' + data.decision + '"<br>';
-  html += '"agent_id": "' + data.agent_id + '"<br>';
-  html += '"action": "' + action + '"<br>';
-  if (data.blocked_by) html += '"blocked_by": "' + data.blocked_by + '"<br>';
-  if (data.audit_hash) html += '"audit_hash": "' + data.audit_hash.slice(0,20) + '..."';
-  document.getElementById('resultFields').innerHTML = html;
-
-  document.getElementById('comparison').style.display = 'grid';
-  const compWith = document.getElementById('comp-with');
-  const compDetail = document.getElementById('comp-detail');
-  if (isEx) {
-    compWith.textContent = 'EXECUTED';
-    compWith.className = 'comp-status safe';
-    compDetail.textContent = 'Governed. Audited. Safe.';
-  } else {
-    compWith.textContent = 'BLOCKED';
-    compWith.className = 'comp-status danger';
-    compDetail.textContent = 'Blocked before execution.';
-  }
-}
-
-async function executeCustom() {
-  const intent = document.getElementById('intentInput').value.trim();
-  const agentType = customMode ? document.getElementById('agentType').value : 'ops';
-  const btn = document.getElementById('execBtn');
-  const label = document.getElementById('execLabel');
-
-  if (!intent) { label.textContent = 'Enter an intent first'; setTimeout(() => { label.textContent = '▶ Evaluar con WEZ'; }, 1500); return; }
-
-  btn.disabled = true;
-  btn.style.opacity = '0.6';
-
-  label.textContent = 'Parsing intent...';
-  await sleep(60);
-
-  const action = customMode
-    ? document.getElementById('actionSelect').value
-    : guessAction(intent);
-
-  label.textContent = getDynamicMessage(action);
-  await sleep(120);
-
-  const data = simulateWEZ(agentType, action, false);
-  renderResultWithImpact(data, action, agentType);
-  addAuditEntry(data, action, agentType);
-  updateStats(data.decision === 'EXECUTED');
-
-  fetch(`${WEZ_URL}/demo/run`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ intent, agent_type: agentType })
-  }).catch(() => {});
-
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    label.textContent = '▶ Evaluar con WEZ';
-  }, 150);
-}
-
-// Session context — per browser session only
-let _lastIntent = '';
-
-function guessAction(intent) {
-  // Combine with last input to catch split-intent attacks
-  const combined = (_lastIntent + ' ' + intent).trim();
-  if (intent.length > 10) _lastIntent = intent; // ignore noise
-  const intentToEval = combined;
-  // WEZ Intent Engine v2 — Action + Target + Context
-  // Deterministic. Explainable. Fail-closed.
-
-  const raw = intentToEval.toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '') // strip accents
-    .replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-
-  // --- Layer 1: Safe contexts (reduce false positives) ---
-  const safeContexts = ['logs','log','notifications','notificaciones','alerts','alertas',
-    'cache','email','correo','report','reporte'];
-  const isSafe = safeContexts.some(w => raw.includes(w));
-
-  // --- Layer 1b: Implicit destructive intent (no verb needed) ---
-  const implicitDestructive = ['no longer needed','not required','should not be running',
-    'can be removed','can be retired','no se necesita','ya no es necesario','se puede eliminar',
-    'scale to zero','escalar a cero','replicas 0','replicas to 0'];
-  const implicitZero = (raw.includes('scale') || raw.includes('escal')) &&
-    (/\b0\b/.test(raw) || raw.includes('zero') || raw.includes('cero'));
-  if (implicitDestructive.some(p => raw.includes(p)) || implicitZero) return 'delete_resource';
-
-  // --- Layer 2: Destructive actions ---
-  const deleteVerbs = ['destruir','eliminar','borrar','suprimir','vaciar','purgar','limpiar base',
-    'delete','purge','remove','erase','wipe','drop','truncat'];
-  const deleteTargets = ['base de datos','database','db','tabla','table','registro','record',
-    'archivo','file','dato','data','storage','almacen'];
-  if (deleteVerbs.some(v => raw.includes(v))) return 'delete_resource';
-  if (deleteVerbs.some(v => raw.includes(v)) && deleteTargets.some(t => raw.includes(t))) return 'delete_resource';
-
-  // --- Layer 3: Kill / shutdown actions ---
-  const killVerbs = ['apagar','matar','detener','terminar','cerrar','deshabilitar','desactivar',
-    'inhabilitar','bajar','shutdown','kill','terminate','halt','disable','decommission',
-    'bring down','take down','take offline','turn off','power off','stop'];
-  const killTargets = ['servidor','server','servicio','service','proceso','process','instancia',
-    'instance','nodo','node','cluster','sistema','system','api','backend','aplicacion','app'];
-  const sensitiveAccess = ['acceso root','root access','sudo','privilege','privilegio','escalada','escalation','admin access','elevated','superuser','su -','run as'];
-
-  const hasKillVerb = killVerbs.some(v => raw.includes(v));
-  const hasKillTarget = killTargets.some(t => raw.includes(t));
-  const hasSensitiveAccess = sensitiveAccess.some(s => raw.includes(s));
-
-  if (hasSensitiveAccess) return 'kill_process';
-  if (hasKillVerb && hasKillTarget && !isSafe) return 'kill_process';
-  if (hasKillVerb && !isSafe && raw.split(' ').length <= 4) return 'kill_process';
-
-  // --- Layer 3b: Scale to zero = destructive ---
-  const isScaleToZero = (raw.includes('scale') || raw.includes('escalar')) &&
-    (raw.includes(' 0') || raw.includes('zero') || raw.includes('cero'));
-  if (isScaleToZero) return 'delete_resource';
-
-  // --- Layer 4: Scale ---
-  const scale = ['escalar','ampliar','aumentar replicas','aumentar instancias',
-    'scale','replica','more instance','expand'];
-  if (scale.some(w => raw.includes(w))) return 'scale_service';
-
-  // --- Layer 5: Restart ---
-  const restart = ['reiniciar','reboot','restart','relanzar'];
-  if (restart.some(w => raw.includes(w))) return 'restart_service';
-
-  // --- Layer 6: Notify ---
-  const notify = ['notificar','alertar','enviar alerta','mandar mensaje',
-    'notify','alert','send data','exfil','transferir'];
-  if (notify.some(w => raw.includes(w)) && !isSafe) return 'send_notification';
-
-  // --- Layer 7: Create ---
-  const create = ['crear','insertar','guardar','registrar','create','insert','store'];
-  if (create.some(w => raw.includes(w))) return 'create_record';
-
-  // --- Layer 8: Read ---
-  const read = ['leer','ver metricas','consultar','monitorear','read','metrics','monitor','status'];
-  if (read.some(w => raw.includes(w))) return 'read_metrics';
-
-  // --- Default: fail-closed ---
-  return 'delete_resource';
-}
-
-async function evaluate(action, agentType, isReplay) {
-  const btn = document.getElementById('execBtn');
-  const label = document.getElementById('execLabel');
-  btn.style.opacity = '0.5';
-  label.textContent = '⟳ Evaluating...';
-
-  let data;
-  try {
-    const res = await fetch(`${WEZ_URL}/demo/execute`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ agent_type:agentType, actions:[{action,args:{}}], stability_score:0.92 })
-    });
-    data = await res.json();
-    if (!data.decision) throw new Error('No decision');
-  } catch(e) {
-    data = simulateWEZ(agentType, action, isReplay);
-  }
-
-  lastAction = action;
-  lastAgentType = agentType;
-
-  renderResult(data, action, agentType);
-  addAuditEntry(data, action, agentType);
-  updateStats(data.decision === 'EXECUTED');
-
-  btn.style.opacity = '1';
-  label.textContent = '▶ Evaluate with WEZ';
-}
-
-function renderResult(data, action, agentType) {
-  const isEx = data.decision === 'EXECUTED';
-
-  document.getElementById('placeholder').style.display = 'none';
-  document.getElementById('resultBox').className = 'result-box visible';
-
-  const verdict = document.getElementById('verdictLabel');
-  verdict.textContent = data.decision;
-  verdict.className = `verdict-label ${isEx ? 'executed' : 'blocked'}`;
-
-  const reason = document.getElementById('verdictReason');
-  if (data.blocked_by) {
-    reason.textContent = data.blocked_by.replace(/_/g,' ');
-  } else {
-    reason.textContent = `action: ${action} · agent: ${agentType}`;
-  }
-
-  let html = '';
-  html += `<span class="rf-key">"decision"</span>: <span class="${isEx?'rf-green':'rf-red'}">"${data.decision}"</span>\n`;
-  html += `<span class="rf-key">"agent_id"</span>: <span class="rf-val">"${data.agent_id}"</span>\n`;
-  html += `<span class="rf-key">"action"</span>: <span class="rf-blue">"${action}"</span>\n`;
-  if (data.blocked_by) html += `<span class="rf-key">"blocked_by"</span>: <span class="rf-red">"${data.blocked_by}"</span>\n`;
-  if (data.decision_id) html += `<span class="rf-key">"decision_id"</span>: <span class="rf-val">"${data.decision_id.slice(0,18)}..."</span>\n`;
-  if (data.audit_hash) html += `<span class="rf-key">"audit_hash"</span>: <span class="rf-blue">"${data.audit_hash.slice(0,20)}..."</span>`;
-  document.getElementById('resultFields').innerHTML = html.replace(/\n/g,'<br>');
-
-  // Comparison
-  const comp = document.getElementById('comparison');
-  comp.style.display = 'grid';
-  const compWith = document.getElementById('comp-with');
-  const compDetail = document.getElementById('comp-detail');
-  if (isEx) {
-    compWith.textContent = 'EXECUTED';
-    compWith.className = 'comp-status safe';
-    compDetail.textContent = 'Governed. Audited. Safe.';
-  } else {
-    compWith.textContent = 'BLOCKED';
-    compWith.className = 'comp-status danger';
-    compDetail.textContent = data.blocked_by ? data.blocked_by.replace(/_/g,' ').toLowerCase() : 'blocked by policy';
-  }
-}
-
-function addAuditEntry(data, action, agentType) {
-  auditSeq++;
-  const rows = document.getElementById('auditRows');
-  const empty = rows.querySelector('.audit-empty');
-  if (empty) empty.remove();
-
-  const isEx = data.decision === 'EXECUTED';
-  const now = new Date();
-  const time = now.toTimeString().slice(0,8);
-
-  const row = document.createElement('div');
-  row.className = 'audit-row';
-  row.innerHTML = `
-    <div class="audit-seq-val">#${String(auditSeq).padStart(3,'0')}</div>
-    <div class="audit-action-val">${data.agent_id} → ${action}</div>
-    <div><span class="audit-badge ${isEx?'executed':'blocked'}">${data.decision}</span></div>
-    <div class="audit-hash-val">${(data.audit_hash||'').slice(0,22)}...</div>
-    <div class="audit-ts">${time}</div>
-  `;
-  rows.insertBefore(row, rows.firstChild);
-  document.getElementById('auditCount').textContent = `${auditSeq} ${auditSeq===1?'entry':'entries'}`;
-}
-
-function updateStats(isExecuted) {
-  stats.total++;
-  if (isExecuted) stats.executed++; else stats.blocked++;
-  document.getElementById('s-executed').textContent = stats.executed;
-  document.getElementById('s-blocked').textContent = stats.blocked;
-  document.getElementById('s-total').textContent = stats.total;
-}
-
-// Init scenario list on load
-renderScenarioList();
-</script>
 </body>
 </html>
