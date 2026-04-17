@@ -27,16 +27,117 @@ section{padding:80px 24px}.container{max-width:1100px;margin:0 auto}
 </head>
 <body>
 
-<nav><div class="nav-inner"><span class="nav-logo">WEZ</span><div class="nav-links"><a href="#problem">Problem</a><a href="#how">How it works</a><a href="#perf">Performance</a><a href="#try" class="nav-cta">Get API key</a></div></div></nav>
+<nav><div class="nav-inner"><span class="nav-logo">WEZ</span><div class="nav-links"><a href="#problem" data-i18n="nav_problem">Problem</a><a href="#how" data-i18n="nav_how">How it works</a><a href="#perf" data-i18n="nav_perf">Performance</a><button onclick="toggleLang()" id="lang-btn" style="padding:6px 14px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-family:var(--mono);cursor:pointer;letter-spacing:1px;transition:all 0.2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">ES</button><a href="#try" class="nav-cta" data-i18n="nav_cta">Get API key</a></div></div></nav>
+
+<script>
+const translations = {
+  en: {
+    nav_problem: 'Problem',
+    nav_how: 'How it works',
+    nav_perf: 'Performance',
+    nav_cta: 'Get API key',
+    hero_label: 'For teams running AI agents in production',
+    hero_h1: 'Your agent will do something<br>it shouldn\'t. <span style="color:var(--accent)">WEZ decides<br>before it happens.</span>',
+    hero_sub: 'The only deterministic runtime governance for AI agents. No LLM. No ML. No hallucinations.',
+    hero_sub2: 'One API call. Before every action. Sub-millisecond. Fully auditable.',
+    hero_cta1: 'Get your API key →',
+    hero_cta2: 'How it works',
+    hero_badge: '15 days free · No credit card · 5 minute setup',
+    prob_label: 'The problem',
+    prob_title: 'Your agents don\'t fail loudly. They fail quietly.',
+    prob_desc: 'Everything looks fine. Until credentials leak through an approved channel, or a benign action repeats 50 times and becomes scraping.',
+    prob1_title: 'Whitelists break',
+    prob1_desc: 'Agents create new tools and encode data in ways your whitelist never anticipated.',
+    prob2_title: 'LLM-as-judge is slow',
+    prob2_desc: '200-2000ms per evaluation. Non-deterministic. And it can hallucinate. You\'re adding a second attack surface that can fail unpredictably.',
+    prob3_title: 'Subtle attacks pass',
+    prob3_desc: 'Base64 credentials in payloads. Silent scraping via repeated calls. Sequences that look valid individually but aren\'t.',
+    prob4_title: 'No real audit trail',
+    prob4_desc: 'When something goes wrong, you need to prove exactly what was decided, why, and that it wasn\'t tampered with.',
+    how_label: 'How it works',
+    how_title: 'One API call. Before every action.',
+    how_desc: 'Your agent wants to act → WEZ evaluates → APPROVE, BLOCK, or ESCALATE. In under 1ms. Deterministic decisions you can audit.',
+    perf_label: 'Performance',
+    perf_title: '1000x faster and deterministic.',
+    perf_desc: 'Measured on 800 consecutive evaluations. Single Node.js thread. No external dependencies. No cost per evaluation.',
+    catch_label: 'What it catches',
+    catch_desc: '0 false negatives across 50 production-inspired scenarios.',
+    int_label: 'Integration',
+    int_title: '3 lines of code.',
+    int_desc: 'Add one HTTP call before each agent action. Works with any language, any framework, any agent.',
+    cta_label: 'Get started',
+    cta_title: 'Try WEZ on your agents.',
+    cta_desc: '15 days free. No credit card. No commitment.<br>Get your API key in 5 minutes.',
+    cta_btn: 'Contact on LinkedIn →',
+    footer: 'WEZ Protocol © 2026 · Deterministic Governance for AI Agents · v2.0.2'
+  },
+  es: {
+    nav_problem: 'El problema',
+    nav_how: 'Cómo funciona',
+    nav_perf: 'Performance',
+    nav_cta: 'Obtener API key',
+    hero_label: 'Para equipos con agentes de IA en producción',
+    hero_h1: 'Tu agente hará algo<br>que no debería. <span style="color:var(--accent)">WEZ decide<br>antes de que ocurra.</span>',
+    hero_sub: 'La única capa de gobernanza runtime determinística para agentes de IA. Sin LLM. Sin ML. Sin alucinaciones.',
+    hero_sub2: 'Una sola llamada a la API. Antes de cada acción. Sub-milisegundo. Totalmente auditable.',
+    hero_cta1: 'Obtener API key →',
+    hero_cta2: 'Cómo funciona',
+    hero_badge: '15 días gratis · Sin tarjeta de crédito · Configuración en 5 minutos',
+    prob_label: 'El problema',
+    prob_title: 'Tus agentes no fallan con ruido. Fallan en silencio.',
+    prob_desc: 'Todo parece estar bien. Hasta que las credenciales se filtran por un canal autorizado, o una acción inocente se repite 50 veces y se convierte en scraping.',
+    prob1_title: 'Las listas blancas fallan',
+    prob1_desc: 'Los agentes crean herramientas nuevas y codifican datos de formas que tu whitelist nunca anticipó.',
+    prob2_title: 'LLM-as-judge es lento',
+    prob2_desc: '200-2000ms por evaluación. No determinístico. Y puede alucinar. Estás agregando una segunda superficie de ataque que puede fallar de forma impredecible.',
+    prob3_title: 'Los ataques sutiles pasan',
+    prob3_desc: 'Credenciales en Base64 dentro de payloads. Scraping silencioso mediante llamadas repetidas. Secuencias que parecen válidas individualmente pero no lo son.',
+    prob4_title: 'Sin audit trail real',
+    prob4_desc: 'Cuando algo sale mal, necesitás probar exactamente qué se decidió, por qué, y que no hubo manipulación.',
+    how_label: 'Cómo funciona',
+    how_title: 'Una llamada a la API. Antes de cada acción.',
+    how_desc: 'Tu agente quiere actuar → WEZ evalúa → APPROVE, BLOCK o ESCALATE. En menos de 1ms. Decisiones determinísticas que podés auditar.',
+    perf_label: 'Performance',
+    perf_title: '1000x más rápido y determinístico.',
+    perf_desc: 'Medido en 800 evaluaciones consecutivas. Un solo hilo Node.js. Sin dependencias externas. Sin costo por evaluación.',
+    catch_label: 'Lo que detecta',
+    catch_desc: '0 falsos negativos en 50 escenarios reales de producción.',
+    int_label: 'Integración',
+    int_title: '3 líneas de código.',
+    int_desc: 'Una sola llamada HTTP antes de cada acción del agente. Funciona con cualquier lenguaje, framework o agente.',
+    cta_label: 'Empezar',
+    cta_title: 'Probá WEZ en tus agentes.',
+    cta_desc: '15 días gratis. Sin tarjeta de crédito. Sin compromiso.<br>Obtené tu API key en 5 minutos.',
+    cta_btn: 'Contactar en LinkedIn →',
+    footer: 'WEZ Protocol © 2026 · Gobernanza Determinística para Agentes de IA · v2.0.2'
+  }
+};
+
+let currentLang = 'en';
+
+function toggleLang() {
+  currentLang = currentLang === 'en' ? 'es' : 'en';
+  document.getElementById('lang-btn').textContent = currentLang === 'en' ? 'ES' : 'EN';
+  const t = translations[currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined) {
+      if (el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'P' || el.tagName === 'DIV' || el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3') {
+        el.innerHTML = t[key];
+      }
+    }
+  });
+}
+</script>
 
 <!-- HERO -->
 <div style="padding:140px 24px 60px;text-align:center;position:relative">
 <div style="position:absolute;top:60px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,0.08) 0%,transparent 70%);pointer-events:none"></div>
 <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:28px"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span> Live on AWS — v2.0.2</div>
-<div style="font-size:13px;color:var(--text3);letter-spacing:0.5px;margin-bottom:16px;text-transform:uppercase;font-weight:500">For teams running AI agents in production</div>
-<h1 style="font-size:clamp(34px,5.5vw,56px);font-weight:700;letter-spacing:-2px;line-height:1.1;margin-bottom:20px">Your agent will do something<br>it shouldn't. <span style="color:var(--accent)">WEZ decides<br>before it happens.</span></h1>
-<p style="font-size:17px;color:var(--text2);max-width:520px;margin:0 auto 12px;line-height:1.6">Deterministic governance for AI agents. Every action evaluated before execution.</p>
-<p style="font-size:15px;color:var(--text);font-weight:600;margin-bottom:36px">One API call. Before every action. Sub-millisecond. Fully auditable.</p>
+<div style="font-size:13px;color:var(--text3);letter-spacing:0.5px;margin-bottom:16px;text-transform:uppercase;font-weight:500" data-i18n="hero_label">For teams running AI agents in production</div>
+<h1 style="font-size:clamp(34px,5.5vw,56px);font-weight:700;letter-spacing:-2px;line-height:1.1;margin-bottom:20px" data-i18n="hero_h1">Your agent will do something<br>it shouldn't. <span style="color:var(--accent)">WEZ decides<br>before it happens.</span></h1>
+<p style="font-size:17px;color:var(--text2);max-width:520px;margin:0 auto 12px;line-height:1.6" data-i18n="hero_sub">The only deterministic runtime governance for AI agents. No LLM. No ML. No hallucinations.</p>
+<p style="font-size:15px;color:var(--text);font-weight:600;margin-bottom:36px" data-i18n="hero_sub2">One API call. Before every action. Sub-millisecond. Fully auditable.</p>
 <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
 <a href="#try" class="btn-p">Get your API key &rarr;</a>
 <a href="#how" class="btn-s">How it works</a>
@@ -79,7 +180,7 @@ section{padding:80px 24px}.container{max-width:1100px;margin:0 auto}
 <div class="sd" style="margin-left:auto;margin-right:auto">Everything looks fine. Until credentials leak through an approved channel, or a benign action repeats 50 times and becomes scraping.</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;text-align:left">
 <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">🔒</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">Whitelists break</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Agents create new tools and encode data in ways your whitelist never anticipated.</p></div>
-<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">🐌</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">LLM-as-judge is slow</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">200-2000ms per evaluation. Non-deterministic. And you're adding a second attack surface.</p></div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">🐌</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px" data-i18n="prob2_title">LLM-as-judge is slow</h3><p style="font-size:13px;color:var(--text2);line-height:1.5" data-i18n="prob2_desc">200-2000ms per evaluation. Non-deterministic. And it can hallucinate. You're adding a second attack surface that can fail unpredictably.</p></div>
 <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">👻</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">Subtle attacks pass</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">Base64 credentials in payloads. Silent scraping via repeated calls. Sequences that look valid individually but aren't.</p></div>
 <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px"><div style="font-size:22px;margin-bottom:10px">📋</div><h3 style="font-size:15px;font-weight:600;margin-bottom:6px">No real audit trail</h3><p style="font-size:13px;color:var(--text2);line-height:1.5">When something goes wrong, you need to prove exactly what was decided, why, and that it wasn't tampered with.</p></div>
 </div>
@@ -105,7 +206,7 @@ section{padding:80px 24px}.container{max-width:1100px;margin:0 auto}
 <section id="perf">
 <div class="container">
 <div class="sl">Performance</div>
-<div class="st">1000x faster than LLM-based governance.</div>
+<div class="st" data-i18n="perf_title">1000x faster and deterministic.</div>
 <div class="sd">Measured on 800 consecutive evaluations. Single Node.js thread. No external dependencies. No cost per evaluation.</div>
 <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:40px">
 <div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">0.16ms</div><div style="font-size:11px;color:var(--text2);margin-top:6px">p50 latency</div></div>
