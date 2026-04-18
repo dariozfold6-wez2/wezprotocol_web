@@ -216,19 +216,179 @@ function toggleLang() {
 <div style="background:var(--bg2);padding:24px 20px;text-align:center"><div style="font-family:var(--mono);font-size:26px;font-weight:700;color:var(--accent)">0</div><div style="font-size:11px;color:var(--text2);margin-top:6px">dependencies</div></div>
 </div>
 
-<div class="sl">What it catches</div>
-<p style="font-size:13px;color:var(--text2);margin-bottom:16px">0 false negatives across 50 production-inspired scenarios.</p>
-<div style="overflow-x:auto">
-<table style="width:100%;border-collapse:collapse">
-<tr><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">ATTACK</th><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">DECISION</th><th style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border)">HOW</th></tr>
-<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Unknown tool: export_financial_report</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Inference Engine (97% confidence)</td></tr>
-<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Base64 credentials in notification</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Content Inspector — decode + pattern</td></tr>
-<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">Script: "ensure persistence via crontab"</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--red);font-family:var(--mono);font-weight:600;font-size:11px">BLOCK</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">APT pattern detection</td></tr>
-<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">read_logs repeated 4x (scraping)</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Velocity Override</td></tr>
-<tr style="border-bottom:1px solid var(--border)"><td style="font-size:12px;padding:12px 14px">execute_trade $5M (catalog says low risk)</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Cross-validation catalog ↔ inference</td></tr>
-<tr><td style="font-size:12px;padding:12px 14px">update_config + override_security</td><td style="font-size:12px;padding:12px 14px"><span style="color:var(--yellow);font-family:var(--mono);font-weight:600;font-size:11px">ESCALATE</span></td><td style="font-size:12px;padding:12px 14px;color:var(--text2)">Cognitive Gate — conflicting signals</td></tr>
-</table>
+<!-- INTERACTIVE TERMINAL -->
+<div class="sl" style="margin-top:48px">Try it</div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:20px">Click a scenario. See WEZ decide in real time.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="scenario-btns">
+  <button onclick="runScenario(0)" class="scn-btn scn-active" style="padding:8px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--accent);color:var(--text);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.2s">Credential leak</button>
+  <button onclick="runScenario(1)" class="scn-btn" style="padding:8px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.2s">$5M trade</button>
+  <button onclick="runScenario(2)" class="scn-btn" style="padding:8px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.2s">Scraping detected</button>
+  <button onclick="runScenario(3)" class="scn-btn" style="padding:8px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all 0.2s">Normal action</button>
 </div>
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+  <div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+    <span style="width:10px;height:10px;border-radius:50%;background:#ef4444"></span>
+    <span style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></span>
+    <span style="width:10px;height:10px;border-radius:50%;background:#22c55e"></span>
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:8px">POST /v1/evaluate</span>
+    <span id="eval-status" style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)"></span>
+  </div>
+  <div id="terminal-body" style="padding:20px;font-family:var(--mono);font-size:12px;line-height:1.9;color:var(--text2);overflow-x:auto;min-height:220px;white-space:pre-wrap"></div>
+</div>
+
+<!-- WHAT IT CATCHES -->
+<div class="sl" style="margin-top:48px">What it catches</div>
+<p style="font-size:13px;color:var(--text2);margin-bottom:20px">0 false negatives across 50 production-inspired scenarios.</p>
+
+<!-- Top 3 featured -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:12px">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">send_notification (base64 payload)</span>
+      <span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">Credential leak detected (base64 decoded) · 0.18ms</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">execute_trade $5M</span>
+      <span style="color:var(--yellow);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(245,158,11,0.1);padding:3px 10px;border-radius:4px">ESCALATE</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">Cross-validation: catalog vs inference mismatch · 0.31ms</div>
+  </div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">read_logs × 4 (same agent)</span>
+      <span style="color:var(--yellow);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(245,158,11,0.1);padding:3px 10px;border-radius:4px">ESCALATE</span>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">Velocity override: scraping pattern · 0.22ms</div>
+  </div>
+</div>
+
+<!-- Expandable +7 -->
+<div id="more-scenarios" style="display:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:12px;display:none">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">export_financial_report (unknown tool)</span><span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span></div><div style="font-size:11px;color:var(--text3)">Inference Engine — 97% confidence · 0.41ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">ensure persistence via crontab</span><span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span></div><div style="font-size:11px;color:var(--text3)">APT pattern detection · 0.28ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">update_config + override_security</span><span style="color:var(--yellow);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(245,158,11,0.1);padding:3px 10px;border-radius:4px">ESCALATE</span></div><div style="font-size:11px;color:var(--text3)">Cognitive Gate — conflicting signals · 0.57ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">export_sensitive_data → external endpoint</span><span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span></div><div style="font-size:11px;color:var(--text3)">Data Access Control — unauthorized destination · 0.33ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">delete_resource (prod, recursive)</span><span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span></div><div style="font-size:11px;color:var(--text3)">Catalog — CRITICAL action in STABLE state · 0.19ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">python3 reverse shell one-liner</span><span style="color:var(--red);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(239,68,68,0.1);padding:3px 10px;border-radius:4px">BLOCK</span></div><div style="font-size:11px;color:var(--text3)">Content Inspector — C2 pattern · 0.31ms</div></div>
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-family:var(--mono);font-size:11px;color:var(--text2)">read_metrics (normal operation)</span><span style="color:var(--green);font-family:var(--mono);font-weight:700;font-size:12px;background:rgba(34,197,94,0.1);padding:3px 10px;border-radius:4px">APPROVE</span></div><div style="font-size:11px;color:var(--text3)">Safe action — no signals triggered · 0.16ms</div></div>
+</div>
+
+<button onclick="toggleMore()" id="more-btn" style="display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all 0.2s;margin-top:4px" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+  <span id="more-arrow">▼</span> <span id="more-label">+7 more scenarios</span>
+</button>
+
+<script>
+const scenarios = [
+  {
+    label: 'Credential leak',
+    request: `{
+  "agentId": "agent-notifier",
+  "action": "send_notification",
+  "args": {
+    "channel": "team",
+    "message": "Deploy complete. Details: QUtJQUlPU0ZPRE5ON0VYQU1QTEUtc2VjcmV0PXdKYWxyWFV0bkZFTUkvSzdNREVORy9iUHhSZmlDWUVYQU1QTEVLRVk="
+  }
+}`,
+    decision: 'BLOCK',
+    reason: 'credential leak detected (base64 decoded: AKIA... AWS key)',
+    latency: 0.18,
+    color: 'var(--red)'
+  },
+  {
+    label: '$5M trade',
+    request: `{
+  "agentId": "agent-trading",
+  "action": "execute_trade",
+  "args": {
+    "amount": 5000000,
+    "asset": "BTC",
+    "direction": "BUY"
+  }
+}`,
+    decision: 'ESCALATE',
+    reason: 'cross-validation mismatch: catalog says LOW_RISK, inference says CRITICAL',
+    latency: 0.31,
+    color: 'var(--yellow)'
+  },
+  {
+    label: 'Scraping detected',
+    request: `{
+  "agentId": "agent-reader",
+  "action": "read_logs",
+  "args": {
+    "source": "prod-db",
+    "limit": 1000
+  }
+}`,
+    decision: 'ESCALATE',
+    reason: 'velocity override: same action repeated 4x in 60s by same agent',
+    latency: 0.22,
+    color: 'var(--yellow)'
+  },
+  {
+    label: 'Normal action',
+    request: `{
+  "agentId": "agent-monitor",
+  "action": "read_metrics",
+  "args": {
+    "service": "api-gateway",
+    "window": "5m"
+  }
+}`,
+    decision: 'APPROVE',
+    reason: null,
+    latency: 0.16,
+    color: 'var(--green)'
+  }
+];
+
+function runScenario(idx) {
+  // Update button styles
+  document.querySelectorAll('.scn-btn').forEach((b, i) => {
+    b.style.borderColor = i === idx ? 'var(--accent)' : 'var(--border2)';
+    b.style.color = i === idx ? 'var(--text)' : 'var(--text2)';
+  });
+
+  const s = scenarios[idx];
+  const terminal = document.getElementById('terminal-body');
+  const status = document.getElementById('eval-status');
+
+  // Show evaluating state
+  status.textContent = '⟳ evaluating...';
+  status.style.color = 'var(--text3)';
+  terminal.innerHTML = '<span style="color:var(--text3)"># Request</span>\n' + s.request;
+
+  setTimeout(() => {
+    const decisionColor = s.color;
+    const reasonLine = s.reason ? `\n  <span style="color:var(--green)">"reason"</span>: <span style="color:var(--text2)">"${s.reason}"</span>,` : '';
+    terminal.innerHTML = `<span style="color:var(--text3)"># Request</span>\n${s.request}\n\n<span style="color:var(--text3)"># WEZ decision</span>\n{\n  <span style="color:var(--green)">"decision"</span>: <span style="color:${decisionColor};font-weight:700">"${s.decision}"</span>,${reasonLine}\n  <span style="color:var(--green)">"latency_ms"</span>: <span style="color:var(--text)">${s.latency}</span>\n}`;
+    status.textContent = `✓ ${s.latency}ms`;
+    status.style.color = decisionColor;
+  }, 320);
+}
+
+function toggleMore() {
+  const el = document.getElementById('more-scenarios');
+  const btn = document.getElementById('more-btn');
+  const arrow = document.getElementById('more-arrow');
+  const label = document.getElementById('more-label');
+  if (el.style.display === 'none') {
+    el.style.display = 'grid';
+    arrow.textContent = '▲';
+    label.textContent = 'Show less';
+  } else {
+    el.style.display = 'none';
+    arrow.textContent = '▼';
+    label.textContent = '+7 more scenarios';
+  }
+}
+
+// Init terminal with first scenario
+runScenario(0);
+</script>
 </div>
 </section>
 
